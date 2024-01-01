@@ -2,25 +2,25 @@
 const canvas = document.getElementById("game");
 const draw = canvas.getContext("2d");
 //variables to store canvas size
-var RW = canvas.width;
-var RH = canvas.height;
+var RWidth = canvas.width;
+var RHeight = canvas.height;
 //set canvas size
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+canvas.width = window.inneRWidthidth;
+canvas.height = window.inneRHeighteight;
 //resize canvas when window is resized
 addEventListener('resize', () => {
   //set new size
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  canvas.width = window.inneRWidthidth;
+  canvas.height = window.inneRHeighteight;
   //resets transforms
   draw.setTransform(1, 0, 0, 1, 0, 0);
   //update canvas size
-  RW = canvas.width;
-  RH = canvas.height;
+  RWidth = canvas.width;
+  RHeight = canvas.height;
 });
 function insideScreen(x, y, width, height) {
   //checks if its in the screen
-  return (x > (-RW - width) && x < (RW + width) && y > (-RH - height) && y < (RH + height))
+  return (x > (-RWidth - width) && x < (RWidth + width) && y > (-RHeight - height) && y < (RHeight + height))
 }
 function distanceToPoint(x1, y1, x2, y2) {
   return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
@@ -35,10 +35,13 @@ function isEven(n) {
 }
 //draws a rectangle
 function rect(x, y, width, height) {
+  //create gameoffset, subtracting x or y value by this gives the place to draw
+  let gameXOffset = gameXSize/2;
+  let gameYOffset = gameYSize/2;
   //is it on screen
-  if (insideScreen(x, y, width, height)) {
+  if (insideScreen(x-gameXOffset, y-gameYOffset, width, height)) {
     //draw it 
-    draw.fillRect(x, y, width, height);
+    draw.fillRect(x-gameXOffset, y-gameYOffset, width, height);
   }
 }
 function setcolor(color){
@@ -46,11 +49,14 @@ function setcolor(color){
 }
 //draws an elipse
 function ellipse(x, y, width, height) {
-  //is it on screen
-  if (insideScreen(x, y, width, height)) {
+    //create gameoffset, subtracting x or y value by this gives the place to draw
+    let gameXOffset = gameXSize/2;
+    let gameYOffset = gameYSize/2;  
+    //is it on screen
+  if (insideScreen(x-gameXOffset, y-gameYOffset, width, height)) {
     //draw it 
     draw.beginPath();
-    draw.ellipse(x, y, width, height, Math.PI, 0, 2 * Math.PI);
+    draw.ellipse(x-gameXOffset, y-gameYOffset, width, height, Math.PI, 0, 2 * Math.PI);
     draw.fill();
   }
 }
