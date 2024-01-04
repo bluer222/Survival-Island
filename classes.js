@@ -9,13 +9,8 @@ class player {
         rect(this.x, this.y, 100, 100);
     }
     move(speed, movementx, movementy) {
-        const distance = Math.sqrt(movementx * movementx + movementy * movementy);
-        if (distance != 0) {
-            const scaledXMovement = movementx / distance;
-            const scaledYMovement = movementy / distance;
-            this.x += scaledXMovement * speed; // Apply movement with adjusted speed
-            this.y += scaledYMovement * speed;
-        }
+            this.x += movementx * speed; // Apply movement with adjusted speed
+            this.y += movementy * speed;
     }
 }
 class tree {
