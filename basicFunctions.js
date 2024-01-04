@@ -5,8 +5,8 @@ const draw = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 //variables to store canvas size
-var RWidth = canvas.width;
-var RHeight = canvas.height;
+var screenW = canvas.width;
+var screenH = canvas.height;
 //resize canvas when window is resized
 addEventListener('resize', () => {
   //set new size
@@ -15,12 +15,12 @@ addEventListener('resize', () => {
   //resets transforms
   draw.setTransform(1, 0, 0, 1, 0, 0);
   //update canvas size
-  RWidth = canvas.width;
-  RHeight = canvas.height;
+  screenW = canvas.width;
+  screenH = canvas.height;
 });
 function insideScreen(x, y, width, height) {
   //checks if its in the screen
-  return (x > (-RWidth - width) && x < (RWidth + width) && y > (-RHeight - height) && y < (RHeight + height))
+  return (x > (-screenW - width) && x < (screenW + width) && y > (-screenH - height) && y < (screenH + height))
 }
 function distanceToPoint(x1, y1, x2, y2) {
   return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
@@ -36,8 +36,8 @@ function isEven(n) {
 //draws a rectangle
 function rect(x, y, width, height) {
   //create gameoffset, this compensates for the screensize, the gamesize, and the object size, so its centered
-  let gameXOffset = (gameXSize/2) - (RWidth/2) + (width/2);
-  let gameYOffset = (gameYSize/2) - (RHeight/2) + (height/2);
+  let gameXOffset = gameCamera.x - (screenW/2) + (width/2);
+  let gameYOffset = gameCamera.y - (screenH/2) + (height/2);
   //is it on screen
   if (insideScreen(x-gameXOffset, y-gameYOffset, width, height)) {
     //draw it 
@@ -50,8 +50,8 @@ function setcolor(color){
 //draws an elipse
 function ellipse(x, y, width, height) {
   //create gameoffset, this compensates for the screensize, the gamesize, and the object size, so its centered
-  let gameXOffset = (gameXSize/2) - (RWidth/2) + (width/2);
-  let gameYOffset = (gameYSize/2) - (RHeight/2) + (height/2);
+  let gameXOffset = gameCamera.x - (screenW/2) + (width/2);
+  let gameYOffset = gameCamera.y - (screenH/2) + (height/2);
     //is it on screen
   if (insideScreen(x-gameXOffset, y-gameYOffset, width, height)) {
     //draw it 
