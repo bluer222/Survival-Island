@@ -1,12 +1,8 @@
 class player{
-    constructor(gameXSize, gameYSize) {
-        console.log(gameXSize);
+    constructor() {
         //center location
-        this.x = (gameXSize / 2) + RWidth/2; 
-        this.y = (gameYSize / 2) + RHeight/2;
-    }
-    move(){
-        
+        this.x = (gameXSize / 2); 
+        this.y = (gameYSize / 2);
     }
     draw(){
         setcolor("tan");

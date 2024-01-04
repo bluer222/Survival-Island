@@ -1,17 +1,17 @@
 //get canvas element
 const canvas = document.getElementById("game");
 const draw = canvas.getContext("2d");
+//set canvas size
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 //variables to store canvas size
 var RWidth = canvas.width;
 var RHeight = canvas.height;
-//set canvas size
-canvas.width = window.inneRWidthidth;
-canvas.height = window.inneRHeighteight;
 //resize canvas when window is resized
 addEventListener('resize', () => {
   //set new size
-  canvas.width = window.inneRWidthidth;
-  canvas.height = window.inneRHeighteight;
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
   //resets transforms
   draw.setTransform(1, 0, 0, 1, 0, 0);
   //update canvas size
@@ -35,9 +35,9 @@ function isEven(n) {
 }
 //draws a rectangle
 function rect(x, y, width, height) {
-  //create gameoffset, subtracting x or y value by this gives the place to draw
-  let gameXOffset = gameXSize/2;
-  let gameYOffset = gameYSize/2;
+  //create gameoffset, this compensates for the screensize, the gamesize, and the object size, so its centered
+  let gameXOffset = (gameXSize/2) - (RWidth/2) + (width/2);
+  let gameYOffset = (gameYSize/2) - (RHeight/2) + (height/2);
   //is it on screen
   if (insideScreen(x-gameXOffset, y-gameYOffset, width, height)) {
     //draw it 
@@ -49,9 +49,9 @@ function setcolor(color){
 }
 //draws an elipse
 function ellipse(x, y, width, height) {
-    //create gameoffset, subtracting x or y value by this gives the place to draw
-    let gameXOffset = gameXSize/2;
-    let gameYOffset = gameYSize/2;  
+  //create gameoffset, this compensates for the screensize, the gamesize, and the object size, so its centered
+  let gameXOffset = (gameXSize/2) - (RWidth/2) + (width/2);
+  let gameYOffset = (gameYSize/2) - (RHeight/2) + (height/2);
     //is it on screen
   if (insideScreen(x-gameXOffset, y-gameYOffset, width, height)) {
     //draw it 
@@ -59,4 +59,8 @@ function ellipse(x, y, width, height) {
     draw.ellipse(x-gameXOffset, y-gameYOffset, width, height, Math.PI, 0, 2 * Math.PI);
     draw.fill();
   }
+}
+//if number is > max it becomse max, if number < min it becomes min
+function clamp(number, min, max) {
+  return Math.min(Math.max(number, min), max);
 }
