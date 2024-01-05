@@ -6,7 +6,7 @@ class player {
     }
     draw() {
         setcolor("tan");
-        rect(this.x, this.y, 100, 100);
+        circle(this.x, this.y, 100, 100);
     }
     move(speed, movementx, movementy) {
             this.x += movementx * speed; // Apply movement with adjusted speed
@@ -21,6 +21,19 @@ class tree {
     draw() {
         setcolor("green");
         rect(this.x, this.y, 100, 100);
+    }
+    grow(clock){
+
+    }
+}
+class bush {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+    draw() {
+        setcolor("green");
+        circle(this.x, this.y, 100, 100);
     }
 }
 class backround {
@@ -48,7 +61,5 @@ class camera {
         this.yMomentum = (goaly - this.y) / cameraSpeed;
         this.x += this.xMomentum;
         this.y += this.yMomentum;
-        console.log(this.x);
-
     }
 }
