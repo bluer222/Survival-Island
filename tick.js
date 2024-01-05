@@ -1,6 +1,6 @@
 //size of the map
-let gameXSize = 1000,
-    gameYSize = 1000;
+let gameXSize = 10000,
+    gameYSize = 10000;
 //current movement and speed
 var movement = {
     x: 0,

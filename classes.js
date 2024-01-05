@@ -6,7 +6,7 @@ class player {
     }
     draw() {
         setcolor("tan");
-        circle(this.x, this.y, 100, 100);
+        circle(this.x, this.y, 50, 50);
     }
     move(speed, movementx, movementy) {
             this.x += movementx * speed; // Apply movement with adjusted speed
@@ -20,7 +20,7 @@ class tree {
     }
     draw() {
         setcolor("green");
-        rect(this.x, this.y, 100, 100);
+        rect(this.x, this.y, 50, 50);
     }
     grow(clock){
 
@@ -33,7 +33,7 @@ class bush {
     }
     draw() {
         setcolor("green");
-        circle(this.x, this.y, 100, 100);
+        circle(this.x, this.y, 50, 50);
     }
 }
 class backround {
@@ -45,7 +45,7 @@ class backround {
     }
     draw() {
         setcolor(this.color);
-        rect(this.x, this.y, screenW, screenH);
+        rect(this.x, this.y, gameXSize, gameYSize);
     }
 }
 class camera {
