@@ -7,10 +7,12 @@ var movement = {
     y: 0,//cx and cy are compensated for diagnol movement
     cx: 0,
     cy: 0,
-    speed: 10
+    speed: 5,
+    defaultSpeed: 5,
+    sprintSpeed: 7
 };
 //how quickly does the camera go to the player pos in frames(less frames is faster)
-var cameraSpeed = 20;
+var cameraSpeed = 15;
 //list that will store all the plants in the world
 var plants = [];
 //variables to store things like the camera
@@ -20,6 +22,18 @@ var grass;
 var temptree;
 var ogSeed = 1234;
 var gameSeed = 1234;
+var clock = {
+    minute: 1,
+    hour: 1,
+    day: 1,
+    year: 1,
+    season: 1,
+    seasonName: "spring",
+    isDay: 1
+}
+var seasons = ["spring", "summer", "fall", "winter"]
+var defaultHungerRate = 10;
+var defaultTempRate = 10;
 //detect keydown
 document.addEventListener('keydown', (e) => {
     //if it is a movement key then set the movement variale to reflect it
@@ -34,6 +48,10 @@ document.addEventListener('keydown', (e) => {
     }
     if (e.key == "a" || e.key == "A" || e.key == "ArrowLeft") {
         movement.x -= 1;
+    }
+    if (e.key == "Shift" && movement.speed != movement.sprintSpeed) {
+        movement.speed = movement.sprintSpeed;
+        mainCharacter.hungerRate += 10;
     }
     processMovement();
 });
@@ -50,8 +68,44 @@ document.addEventListener('keyup', (e) => {
     if (e.key == "a" || e.key == "A" || e.key == "ArrowLeft") { //if the keys a or left are down
         movement.x += 1; //the code recognizes that you are holding left or a which moves you in a different function
     }
+    if (e.key == "Shift" && movement.speed == movement.sprintSpeed) {
+        movement.speed = movement.defaultSpeed;
+        mainCharacter.hungerRate -= 10;
+    }
     processMovement();
 });
+function updateClock(){
+    //one minute passes
+    clock.minute += 1;
+    //if its an hour
+    if(clock.minute == 60){
+        clock.minute = 1;
+        clock.hour += 1;
+    }
+    //if its a day
+    if(clock.hour == 8){
+        clock.hour = 1;
+        clock.day += 1;
+        clock.isDay = 1;
+    }
+    //night
+    if(clock.hour == 5){
+        clock.isDay = 0;
+    }
+    //year
+    if(clock.day == 8 && clock.season == 4){
+        clock.day = 1;
+        clock.season = 1;
+        clock.year += 1;
+        clock.seasonName = seasons[clock.season-1];
+    }
+    //season
+    if(clock.day == 8){
+        clock.day = 0;
+        clock.season += 1;
+        clock.seasonName = seasons[clock.season-1];
+    }
+}
 function processMovement() {
     //limit movement variables to a max of 1(if a key is held it will triger keydown multiple times)
     movement.y = clamp(movement.y, -1, 1);
@@ -69,16 +123,22 @@ function processMovement() {
 function start() {
     //game setup
     gameCamera = new camera();
-    mainCharacter = new player();
+    mainCharacter = new player(defaultHungerRate, defaultTempRate);
     grass = new backround("#C0F7B3");
     for(let i = 0; i < 100; i++){
         plants.push(new tree(random(0, gameXSize), random(0, gameXSize)))
     }
+        //start the clock
+        setInterval(()=>{
+            updateClock();
+            mainCharacter.clockSurvival();
+        }, 1000)
     tick();
 }
 function tick() {
     mainCharacter.move(movement.speed, movement.cx, movement.cy)
     gameCamera.move(cameraSpeed, mainCharacter.x, mainCharacter.y);
+    mainCharacter.tickSurvival();
     grass.draw();
     mainCharacter.draw();
     //draw every plant

@@ -47,6 +47,17 @@ function rect(x, y, width, height) {
     draw.fillRect(x-gameXOffset, y-gameYOffset, width, height);
   }
 }
+//draws a rectange without offset
+function staticRect(x, y, width, height) {
+  //create gameoffset, this compensates for the object size, so its centered
+  let gameXOffset = (width/2);
+  let gameYOffset = (height/2);
+  //is it on screen
+  if (insideScreen(x-gameXOffset, y-gameYOffset, width, height)) {
+    //draw it 
+    draw.fillRect(x-gameXOffset, y-gameYOffset, width, height);
+  }
+}
 function setcolor(color){
   draw.fillStyle = color;
 }
