@@ -1,14 +1,32 @@
+//the size of the map width(x) and height(y)
 var gameSize = {
     x: 10000,
     y: 10000
 };
-//current movement and speed
+var healing = {
+    //how hard it is to heal(also makes you lose health faster), default is 2, higher is harder, lower is easyer
+    healDifficutly: 100,
+    //ammount hunger and temp go down each hour
+    hungerRate: 10,
+    tempRate: 10,
+    //healing will be fastest with hunger and temp at these values
+    bestHunger: 100,
+    bestTemp: 70,
+    //how close healscore has to be to 0 for you to heal(if healscore is less than this you heal, if greater you take damage)
+    healThreshold: 0
+};
+healing.healThreshold = (healing.bestTemp + healing.bestHunger)/healing.healDifficutly;
+//movement attebutes
 var movement = {
+    //x = 1 if w pressed, -1 if s pressed, same for y
     x: 0,
-    y: 0,//cx and cy are compensated for diagnol movement
+    y: 0,
+    //cx and cy are compensated for diagnol movement
     cx: 0,
     cy: 0,
+    //current speed
     speed: 5,
+    //sprint and non sprint speeds
     defaultSpeed: 5,
     sprintSpeed: 7
 };
@@ -20,9 +38,11 @@ var plants = [];
 var mainCharacter;
 var gameCamera;
 var grass;
-var temptree;
+//original seed for creating identical worlds
 var ogSeed = 1234;
+//seed used for random(changed every time)
 var gameSeed = 1234;
+//clock, self explanitory
 var clock = {
     minute: 1,
     hour: 1,
@@ -33,8 +53,6 @@ var clock = {
     isDay: 1,
     seasonsNames: ["spring", "summer", "fall", "winter"]
 }
-var defaultHungerRate = 10;
-var defaultTempRate = 50;
 var bars = {
     hunger: "",
     health: "",
@@ -60,7 +78,7 @@ document.addEventListener('keydown', (e) => {
     }
     if (e.key == "Shift" && movement.speed != movement.sprintSpeed) {
         movement.speed = movement.sprintSpeed;
-        mainCharacter.hungerRate += 10;
+        mainCharacter.survival.hungerRate += 10;
     }
     processMovement();
 });
@@ -79,7 +97,7 @@ document.addEventListener('keyup', (e) => {
     }
     if (e.key == "Shift" && movement.speed == movement.sprintSpeed) {
         movement.speed = movement.defaultSpeed;
-        mainCharacter.hungerRate -= 10;
+        mainCharacter.survival.hungerRate -= 10;
     }
     processMovement();
 });
@@ -133,7 +151,7 @@ function processMovement() {
 function start() {
     //game setup
     gameCamera = new camera();
-    mainCharacter = new player(defaultHungerRate, defaultTempRate);
+    mainCharacter = new player(healing);
     grass = new backround("#C0F7B3");
     bars.hunger = new bar(5, 40, 300, 30)
     bars.health = new bar(5, 5, 300, 30)
@@ -150,9 +168,10 @@ function start() {
     tick();
 }
 function tempToColor(temp){
-    var b = 228 - (temp*1.28)
-    var r = 100 + (temp*1.28)
-    return "rgb(" + r + ", 128, " + b + ")" 
+    var b = 255 - (temp*2.55)
+    var r = -50 + (temp*2.55)
+    var g = 106 - (temp)
+    return "rgb(" + r + ", " + g + ", " + b + ")" 
     
 }
 function tick() {
