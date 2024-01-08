@@ -53,39 +53,6 @@ class player {
         this.health = clamp(this.health, 0, 100);
         this.hunger = clamp(this.hunger, 0, 100);
         this.temp = clamp(this.temp, 0, 100);
-
-
-
-        /*
-//check if your going to die
-if(this.hunger < this.survival.hungerThreshold){
-//the more hungry you are, the higher the hunger damage will be
-const hungerDamage = (this.survival.hungerThreshold-this.hunger);
-this.health -= hungerDamage / this.ticksPerHour;
-}
-if(this.temp < this.survival.hungerThreshold){
-const tempDamage = (this.survival.hungerThreshold-this.hunger);
-this.health -= tempDamage / this.ticksPerHour;
-}
-if(this.temp == 100){
-this.health -= 10 / this.ticksPerHour;
-}
-//if the you might be eligable for healing
-if(this.temp > 50 && this.temp < 80 && this.hunger > 50 && this.health != 100){
-//worst healscore witin requirements
-const worstHealScore = (this.survival.bestTemp-50) + (this.survival.bestHunger-50);
-//difference between optimal and current temp
-const tempDiff = Math.abs(this.survival.bestTemp-this.temp);
-            //difference between optimal and current hunger
-const hungerDiff = this.survival.bestHunger-this.hunger;
-const healScore = hungerDiff + tempDiff;
-//calculate how close it is between 0 and worst(closer to 0 is better)
-const healscorePercentage = 1-(healScore/worstHealScore)
-//health increace if you have a perfect healscore
-const maxHealAmmount = 20;
-//increace health
-this.health += maxHealAmmount*healscorePercentage
-}*/
         if (this.health == 0) {
             //die
         }
