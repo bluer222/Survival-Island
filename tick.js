@@ -1,6 +1,7 @@
-//size of the map
-let gameXSize = 10000,
-    gameYSize = 10000;
+var gameSize = {
+    x: 10000,
+    y: 10000
+};
 //current movement and speed
 var movement = {
     x: 0,
@@ -29,11 +30,19 @@ var clock = {
     year: 1,
     season: 1,
     seasonName: "spring",
-    isDay: 1
+    isDay: 1,
+    seasonsNames: ["spring", "summer", "fall", "winter"]
 }
-var seasons = ["spring", "summer", "fall", "winter"]
 var defaultHungerRate = 10;
-var defaultTempRate = 10;
+var defaultTempRate = 50;
+var bars = {
+    hunger: "",
+    health: "",
+    temp: "",
+    hngColor: "brown",
+    hthColor: "red",
+    tmpColor: "look at the temptocolor function"
+}
 //detect keydown
 document.addEventListener('keydown', (e) => {
     //if it is a movement key then set the movement variale to reflect it
@@ -92,18 +101,19 @@ function updateClock(){
     if(clock.hour == 5){
         clock.isDay = 0;
     }
-    //year
-    if(clock.day == 8 && clock.season == 4){
+    //season
+    if(clock.day == 8){
+        if(clock.season == 4){
         clock.day = 1;
         clock.season = 1;
         clock.year += 1;
-        clock.seasonName = seasons[clock.season-1];
-    }
-    //season
-    if(clock.day == 8){
-        clock.day = 0;
-        clock.season += 1;
-        clock.seasonName = seasons[clock.season-1];
+        clock.seasonName = clock.seasonsNames[clock.season-1];
+        //year 
+        }else{
+            clock.day = 0;
+            clock.season += 1;
+            clock.seasonName = clock.seasonsNames[clock.season-1];
+        }
     }
 }
 function processMovement() {
@@ -125,15 +135,25 @@ function start() {
     gameCamera = new camera();
     mainCharacter = new player(defaultHungerRate, defaultTempRate);
     grass = new backround("#C0F7B3");
+    bars.hunger = new bar(5, 40, 300, 30)
+    bars.health = new bar(5, 5, 300, 30)
+    bars.temp = new bar(5, 75, 300, 30)
+
     for(let i = 0; i < 100; i++){
-        plants.push(new tree(random(0, gameXSize), random(0, gameXSize)))
+        plants.push(new tree(random(0, gameSize.x), random(0, gameSize.x)))
     }
         //start the clock
         setInterval(()=>{
             updateClock();
-            mainCharacter.clockSurvival();
+            //other time based stuff
         }, 1000)
     tick();
+}
+function tempToColor(temp){
+    var b = 228 - (temp*1.28)
+    var r = 100 + (temp*1.28)
+    return "rgb(" + r + ", 128, " + b + ")" 
+    
 }
 function tick() {
     mainCharacter.move(movement.speed, movement.cx, movement.cy)
@@ -141,6 +161,9 @@ function tick() {
     mainCharacter.tickSurvival();
     grass.draw();
     mainCharacter.draw();
+    bars.health.draw(mainCharacter.health, bars.hthColor);
+    bars.hunger.draw(mainCharacter.hunger, bars.hngColor);
+    bars.temp.draw(mainCharacter.temp, tempToColor(mainCharacter.temp));
     //draw every plant
     plants.forEach((plant) => plant.draw());
     //Object.keys(everything);

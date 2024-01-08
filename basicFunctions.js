@@ -47,15 +47,20 @@ function rect(x, y, width, height) {
     draw.fillRect(x-gameXOffset, y-gameYOffset, width, height);
   }
 }
+//makes a border for a recangle without offset
+function borderRect(x, y, width, height) { //draws a border
+      //is it on screen
+  if (insideScreen(x, y, width, height)) {
+    draw.strokeRect(x, y, width, height);
+  }
+}
+
 //draws a rectange without offset
 function staticRect(x, y, width, height) {
-  //create gameoffset, this compensates for the object size, so its centered
-  let gameXOffset = (width/2);
-  let gameYOffset = (height/2);
   //is it on screen
-  if (insideScreen(x-gameXOffset, y-gameYOffset, width, height)) {
+  if (insideScreen(x, y, width, height)) {
     //draw it 
-    draw.fillRect(x-gameXOffset, y-gameYOffset, width, height);
+    draw.fillRect(x, y, width, height);
   }
 }
 function setcolor(color){
