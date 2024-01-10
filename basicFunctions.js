@@ -131,3 +131,6 @@ function getRandom(seed) {
   seed = BigInt(seed) * 2685821657736338717n;
   return Number((seed < 0 ? ~seed + 1n : seed) % BigInt(1e9)) / 1e9;
 }
+function negOrPos(){
+  return random(0, 1) < 0.5 ? -1 : 1
+}
