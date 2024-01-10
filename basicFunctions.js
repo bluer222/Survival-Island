@@ -47,6 +47,35 @@ function rect(x, y, width, height) {
     draw.fillRect(x-gameXOffset, y-gameYOffset, width, height);
   }
 }
+//draws a rounded rectangle
+function rRect(x, y, width, height, radius) {
+  //create gameoffset, this compensates for the screensize, the gamesize, and the object size, so its centered
+  let gameXOffset = gameCamera.x - (screenW/2) + (width/2);
+  let gameYOffset = gameCamera.y - (screenH/2) + (height/2);
+  //is it on screen
+  if (insideScreen(x-gameXOffset, y-gameYOffset, width, height)) {
+    //draw it 
+    draw.beginPath();
+    draw.roundRect(x-gameXOffset, y-gameYOffset, width, height, radius);
+    draw.fill();
+  }
+}
+//draws a line
+function line(x, y, x2, y2, thickness) {
+  //create gameoffset, this compensates for the screensize, the gamesize, and the object size, so its centered
+  let gameXOffset = gameCamera.x - (screenW/2);
+  let gameYOffset = gameCamera.y - (screenH/2);
+  //is it on screen
+  if (insideScreen(x-gameXOffset, y-gameYOffset, 0, 0) || insideScreen(x2-gameXOffset, y2-gameYOffset, 0, 0)) {
+    //draw it 
+    draw.beginPath();
+    draw.moveTo(x-gameXOffset, y-gameYOffset);
+    draw.lineTo(x2-gameXOffset, y2-gameYOffset);
+    draw.lineWidth = thickness;
+draw.stroke();
+draw.lineWidth = 1;
+  }
+}
 //makes a border for a recangle without offset
 function borderRect(x, y, width, height) { //draws a border
       //is it on screen
@@ -65,6 +94,8 @@ function staticRect(x, y, width, height) {
 }
 function setcolor(color){
   draw.fillStyle = color;
+  draw.strokeStyle = color;
+
 }
 //draws an elipse
 function circle(x, y, width, height) {
@@ -82,6 +113,16 @@ function circle(x, y, width, height) {
 //if number is > max it becomse max, if number < min it becomes min
 function clamp(number, min, max) {
   return Math.min(Math.max(number, min), max);
+}
+function constrainToExtremes(num, min, max) {
+  if (num <= min || num >= max) {
+    return num; // Stay the same if it is more extreme than the extremes
+  } else {
+    //if it is not more extreme, snap to the closest extreme
+    const distanceToMin = Math.abs(num - min);
+    const distanceToMax = Math.abs(num - max);
+    return distanceToMin < distanceToMax ? min : max;
+  }
 }
 function getRandom(seed) {
   seed ^= seed << 21;

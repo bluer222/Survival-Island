@@ -78,7 +78,7 @@ document.addEventListener('keydown', (e) => {
     }
     if (e.key == "Shift" && movement.speed != movement.sprintSpeed) {
         movement.speed = movement.sprintSpeed;
-        mainCharacter.survival.hungerRate += 10;
+        mainCharacter.healing.hungerRate += 10;
     }
     processMovement();
 });
@@ -97,7 +97,7 @@ document.addEventListener('keyup', (e) => {
     }
     if (e.key == "Shift" && movement.speed == movement.sprintSpeed) {
         movement.speed = movement.defaultSpeed;
-        mainCharacter.survival.hungerRate -= 10;
+        mainCharacter.healing.hungerRate -= 10;
     }
     processMovement();
 });

@@ -75,12 +75,73 @@ class bar {
 }
 class tree {
     constructor(x, y) {
-        this.x = x;
-        this.y = y;
+        //create branches
+        this.branches = {
+            x: [],
+            y: [],
+            size: [],
+            innerXOffset: [],
+            innerYOffset: [],
+        };
+        //add main tree part
+        this.branches.x.push(x);
+        this.branches.y.push(y);
+        this.branches.size.push(random(75, 100));
+        //add side brancehs
+        this.branchNumber = random(0, 3) + 1;
+        const mainSize = this.branches.size[0] / 2
+        this.branches.innerYOffset.push(random(-8, 0));
+        this.branches.innerXOffset.push(random(0, 8));
+        for (let i = 1; i < this.branchNumber; i++) {
+            this.branches.size.push(random(40, 50));
+            const minDist = mainSize + (this.branches.size[i] / 2);
+            if (random(1, 2) == 1) {
+                if (random(1, 2)) {
+                    this.branches.x.push(x - minDist - 12)
+                } else {
+                    this.branches.x.push(x + minDist + 12)
+                }
+                this.branches.y.push(y + random(-minDist, minDist));
+            } else {
+                if (random(1, 2)) {
+                    this.branches.y.push(y - minDist - 12)
+                } else {
+                    this.branches.y.push(y + minDist + 12)
+                }
+                this.branches.x.push(x + random(-minDist, minDist));
+            }
+            this.branches.innerYOffset.push(random(-8, 0));
+            this.branches.innerXOffset.push(random(0, 8));
+        }
     }
     draw() {
-        setcolor("green");
-        rect(this.x, this.y, 50, 50);
+        //draw shadow
+        setcolor("rgba(12,46,32,0.5)");
+        for (let i = 0; i < this.branches.x.length; i++) {
+            rRect(this.branches.x[i], this.branches.y[i]+10, this.branches.size[i], this.branches.size[i], 10);
+            line(this.branches.x[0], this.branches.y[0]+10, this.branches.x[i], this.branches.y[i]+10, 18);
+        }
+        setcolor("#4d2d14");
+        //draw branches
+        for (let i = 0; i < this.branches.x.length; i++) {
+            line(this.branches.x[0], this.branches.y[0], this.branches.x[i], this.branches.y[i], 18);
+        }
+        setcolor("#08562e");
+        //draw leaves outline
+        for (let i = 0; i < this.branches.x.length; i++) {
+            rRect(this.branches.x[i], this.branches.y[i], this.branches.size[i]+4, this.branches.size[i]+4, 10);
+        }
+        setcolor("#096e40");
+        //draw leaves
+        for (let i = 0; i < this.branches.x.length; i++) {
+            rRect(this.branches.x[i], this.branches.y[i], this.branches.size[i], this.branches.size[i], 10);
+        }
+        setcolor("#1f7c43");
+
+                //draw innerleaves
+                for (let i = 0; i < this.branches.x.length; i++) {
+                    rRect(this.branches.x[i]+this.branches.innerXOffset[i], this.branches.y[i]+this.branches.innerYOffset[i], this.branches.size[i]-20, this.branches.size[i]-20, 10);
+                }
     }
     grow(clock) {
 
