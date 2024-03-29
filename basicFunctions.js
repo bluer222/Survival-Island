@@ -60,6 +60,14 @@ function rRect(x, y, width, height, radius) {
     draw.fill();
   }
 }
+function distanceToClosestBoundary(number, min, max) {
+  // Calculate the distance to the min and max
+  const distanceToMin = Math.abs(number - min);
+  const distanceToMax = Math.abs(number - max);
+
+  // Return the smaller distance
+  return Math.min(distanceToMin, distanceToMax);
+}
 //draws a line
 function line(x, y, x2, y2, thickness) {
   //create gameoffset, this compensates for the screensize, the gamesize, and the object size, so its centered

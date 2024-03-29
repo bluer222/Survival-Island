@@ -5,24 +5,27 @@ class player {
         this.y = (gameSize.y / 2);
         //hunger, 0=very hungry 100=full
         this.hunger = 100;
-        //tempature, 100=on fire 0=frozen
-        this.temp = 75;
+        //tempature, 100=on fire 0=frozen (50 perfered)
+        this.temp = 60;
         //health, 100=full 0=dead
         this.health = 100;
         //redefine healing settings for reference
         this.healing = {
-            //how hard it is to heal(also makes you lose health faster), default is 2, higher is harder, lower is easyer
-            healDifficutly: healing.healDifficutly,
             //deffault ammount hunger and temp go down each hour
             hungerRate: healing.hungerRate,
             tempRate: healing.tempRate,
             //healing will be fastest with hunger and temp at these values
             bestHunger: healing.bestHunger,
             bestTemp: healing.bestTemp,
-            //how close healscore has to be to 0 for you to heal(if healscore is less than this you heal, if greater you take damage)
-            healThreshold: healing.healThreshold
-        };        //ticks per hour
+            //increasing this reduces the area where your close enough to optimal for you to heal
+            //it also makes you lose health faster
+            healDifficulty: healing.healDifficulty,
+            //how quickly your health goes up or down
+            healRate: healing.healRate
+        };        
+        //ticks per game hour(60 ticks a second, 60 seconds per game hour)
         this.ticksPerHour = 60 * 60;
+        this.healScore = 0;
     }
     draw() {
         setcolor("tan");
@@ -32,32 +35,42 @@ class player {
         this.x += movementx * speed; // Apply movement with adjusted speed
         this.y += movementy * speed;
     }
+    //this function runs every tick so changes must be devided by the number of ticks in an hour
     tickSurvival() {
         //increase hunger
         this.hunger -= (this.healing.hungerRate / this.ticksPerHour);
         //decreace tempeture
         this.temp -= (this.healing.tempRate / this.ticksPerHour);
-
+        
         //difference between optimal and current temp
         const tempDiff = Math.abs(this.healing.bestTemp - this.temp);
         //difference between optimal and current hunger
-        const hungerDiff = this.healing.bestHunger - this.hunger;
-        //your heascore(lower is better)
-        const healScore = hungerDiff + tempDiff;
-        //convert into persentage of the threshold
-        const healscorePercentage = 1 - (healScore / this.healing.healThreshold)
-        //health increace if you have a perfect healscore
+        const hungerDiff = Math.abs(this.healing.bestHunger - this.hunger);
+        //devide your socre by the worst one to get a decimal where 1 = your trash and 0 = your perfect
+        //if you wonder why its is calculated seperatly its because worst case you can be farther from
+        //the best hunger than you can be from the best temp, so this makes them matter equally
+        const tempFraction = tempDiff / this.healing.bestTemp;
+        const hungerFraction = hungerDiff / this.healing.bestHunger;
+        //convert the individual fractions to one fraction on the same scale
+        const healScoreFraction = (tempFraction + hungerFraction)/2;
+        //right now healing is just as easy as losing health, this is too easy, fix it by multiplying by healdifficulty
+        //the best case stays as 0 but the wort case becomes healdifficulty
+        const scaledHealScoreFraction = healScoreFraction * this.healing.healDifficulty;
+        //subtract it from 1, now the best would be 1 and the worst would be 1-healDifficulty
+        this.healScore =  1 - scaledHealScoreFraction
+        //max healing ammount
         const maxHeal = 20;
-        //change health
-        this.health += (maxHeal * healscorePercentage) / this.ticksPerHour
+        //change health, see now that best case would be you heal the value of maxheal
+        //but worst case you loze healdifficutly times maxheal
+        this.health += (maxHeal * this.healScore) / this.ticksPerHour
+        //make the values be in between 0 and 100
         this.health = clamp(this.health, 0, 100);
         this.hunger = clamp(this.hunger, 0, 100);
         this.temp = clamp(this.temp, 0, 100);
+        //die
         if (this.health == 0) {
-            //die
         }
     }
-
 }
 class bar {
     constructor(x, y, width, height) {
@@ -92,10 +105,10 @@ class tree {
             this.branches.size.push(random(40, 50));
             const minDist = mainSize + (this.branches.size[i] / 2);
             if (random(1, 2) == 1) {
-                this.branches.x.push(x + (minDist + 12)*negOrPos())
+                this.branches.x.push(x + (minDist + 12) * negOrPos())
                 this.branches.y.push(y + random(-minDist, minDist));
             } else {
-                this.branches.y.push(y + (minDist + 12)*negOrPos())
+                this.branches.y.push(y + (minDist + 12) * negOrPos())
                 this.branches.x.push(x + random(-minDist, minDist));
             }
             this.branches.innerYOffset.push(random(-8, 0));
