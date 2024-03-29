@@ -1,8 +1,3 @@
-//the size of the map width(x) and height(y)
-var gameSize = {
-    x: 10000,
-    y: 10000
-};
 //fps counter
 var times = [];
 var fps;
@@ -10,21 +5,14 @@ var fps;
 var ticksPerHour;
 //multiply things that run 60 times a second by this to compensate for lower fps
 var movementComp;
-//healing default config
-var healing = {
-    //ammount hunger and temp go down each hour by default(can be changed by spriting or whatever)
-    hungerRate: 10,
-    tempRate: 10,
-    //how much extra your hunger goes down when sprinting
-    sprintRate: 10,
-    //healing will be fastest with hunger and temp at these values
-    bestHunger: 100,
-    bestTemp: 50,
-    //increasing this reduces the area where your close enough to optimal for you to heal
-    //it also makes you lose health faster    
-    healDifficulty: 7,
-    //how quickly your health goes up or down
-    healRate: 20
+//list that will store all the plants in the world
+var plants = [];
+var gameSize = {
+    //how many chunks in x and y
+    x: 10,
+    y: 10,
+    //size of a chunk in px
+    chunk: 1000,
 };
 //global movement attributes
 var movement = {
@@ -43,16 +31,8 @@ var movement = {
 };
 //how quickly does the camera go to the player pos in frames(less frames is faster)
 var cameraSpeed = 15;
-//list that will store all the plants in the world
-var plants = [];
-//variables to store things like the camera
-var mainCharacter;
-var gameCamera;
-var grass;
-//original world seed for creating identical worlds
-var ogSeed = 1234;
-//seed used for random(changed every time)
-var gameSeed = 1234;
+//world seed for creating identical worlds
+var gameSeed = 43523;
 //clock, self explanitory
 var clock = {
     minute: 1,
@@ -74,6 +54,34 @@ var bars = {
     hthColor: "red",
     tmpColor: "look at the temptocolor function"
 }
+var grass = new backround("#C0F7B3");
+var gameCamera = new camera();
+var mainCharacter = new player({
+    //ammount hunger and temp go down each hour by default(can be changed by spriting or whatever)
+    hungerRate: 10,
+    tempRate: 10,
+    //how much extra your hunger goes down when sprinting
+    sprintRate: 10,
+    //healing will be fastest with hunger and temp at these values
+    bestHunger: 100,
+    bestTemp: 50,
+    //increasing this reduces the area where your close enough to optimal for you to heal
+    //it also makes you lose health faster    
+    healDifficulty: 7,
+    //how quickly your health goes up or down
+    healRate: 20
+});
+//create array for chunks
+var chunks = createArray(gameSize.x, gameSize.y);
+//world creation
+function start() {
+    //start the clock
+    setInterval(() => {
+        updateClock();
+        //other time based stuff
+    }, 1000)
+    tick();
+}
 //detect keydown
 document.addEventListener('keydown', (e) => {
     //if it is a movement key then set the movement variale to reflect it
@@ -93,7 +101,7 @@ document.addEventListener('keydown', (e) => {
     if (e.key == "Shift" && movement.speed != movement.sprintSpeed) {
         //set speed to sprintspeed and increase hunger rate based on config
         movement.speed = movement.sprintSpeed;
-        mainCharacter.healing.hungerRate += healing.sprintRate;
+        mainCharacter.healing.hungerRate += mainCharacter.healing.sprintRate;
     }
     //calculate the actual movement x and y if you compensate for diagnol
     processMovement();
@@ -101,57 +109,57 @@ document.addEventListener('keydown', (e) => {
 //detect keyup events
 document.addEventListener('keyup', (e) => {
     //if you released a movement key then set the value back down 
-    if (e.key == "w" || e.key == "W" || e.key == "ArrowUp") { 
+    if (e.key == "w" || e.key == "W" || e.key == "ArrowUp") {
         movement.y += 1;
     }
-    if (e.key == "d" || e.key == "D" || e.key == "ArrowRight") { 
+    if (e.key == "d" || e.key == "D" || e.key == "ArrowRight") {
         movement.x -= 1;
     }
-    if (e.key == "s" || e.key == "S" || e.key == "ArrowDown") { 
+    if (e.key == "s" || e.key == "S" || e.key == "ArrowDown") {
         movement.y -= 1;
     }
-    if (e.key == "a" || e.key == "A" || e.key == "ArrowLeft") { 
+    if (e.key == "a" || e.key == "A" || e.key == "ArrowLeft") {
         movement.x += 1;
     }
     //if you release shift and you were sprinting before
     if (e.key == "Shift" && movement.speed == movement.sprintSpeed) {
         //set the speed to default and reduce hungerrate to normal
         movement.speed = movement.defaultSpeed;
-        mainCharacter.healing.hungerRate -= healing.sprintRate;
+        mainCharacter.healing.hungerRate -= mainCharacter.healing.sprintRate;
     }
     //calculate the actual movement x and y if you compensate for diagnol
     processMovement();
 });
-function updateClock(){
+function updateClock() {
     //one minute passes
     clock.minute += 1;
     //if its an hour
-    if(clock.minute == 60){
+    if (clock.minute == 60) {
         clock.minute = 1;
         clock.hour += 1;
     }
     //if its a day
-    if(clock.hour == 8){
+    if (clock.hour == 8) {
         clock.hour = 1;
         clock.day += 1;
         clock.isDay = 1;
     }
     //night
-    if(clock.hour == 5){
+    if (clock.hour == 5) {
         clock.isDay = 0;
     }
     //season
-    if(clock.day == 8){
-        if(clock.season == 4){
-        clock.day = 1;
-        clock.season = 1;
-        clock.year += 1;
-        clock.seasonName = clock.seasonsNames[clock.season-1];
-        //year 
-        }else{
+    if (clock.day == 8) {
+        if (clock.season == 4) {
+            clock.day = 1;
+            clock.season = 1;
+            clock.year += 1;
+            clock.seasonName = clock.seasonsNames[clock.season - 1];
+            //year 
+        } else {
             clock.day = 0;
             clock.season += 1;
-            clock.seasonName = clock.seasonsNames[clock.season-1];
+            clock.seasonName = clock.seasonsNames[clock.season - 1];
         }
     }
 }
@@ -170,68 +178,104 @@ function processMovement() {
         movement.cy = movement.y / distance;
     }
 }
-function start() {
-    //game setup
-    gameCamera = new camera();
-    mainCharacter = new player(healing);
-    grass = new backround("#C0F7B3");
-
-    for(let i = 0; i < 10000; i++){
-        plants.push(new tree(random(0, gameSize.x), random(0, gameSize.x)))
-    }
-        //start the clock
-        setInterval(()=>{
-            updateClock();
-            //other time based stuff
-        }, 1000)
-    tick();
-}
 function tempToColor(temperature) {
     // Calculate the color based on the temperature
     let r, g, b;
 
     if (temperature <= 40) {
-         // If temperature is above 50, interpolate between green and yellow
+        // If temperature is above 50, interpolate between green and yellow
         r = 0;
-        g = Math.round(255 * (temperature-30)/(40-30));
+        g = Math.round(255 * (temperature - 30) / (40 - 30));
         b = 255;
-    }else if(temperature < 60){
+    } else if (temperature < 60) {
         // If temperature is below or equal to 50, interpolate between blue and green
-        r = Math.round(255 * (temperature-40)/(60-40));
+        r = Math.round(255 * (temperature - 40) / (60 - 40));
         g = 255;
-        b = Math.round(255 * (temperature-60)/(40-60));
-    } else if(temperature >= 60){
+        b = Math.round(255 * (temperature - 60) / (40 - 60));
+    } else if (temperature >= 60) {
         // If temperature is above 50, interpolate between green and yellow
         r = 255;
         g = Math.round(255 * ((100 - temperature) / 40));
         b = 0;
     }
-    return "rgb(" + r + ", " + g + ", " + b + ")" 
+    return "rgb(" + r + ", " + g + ", " + b + ")"
+}
+//this function finds if a chunk is onscreen
+/*it finds how far the center of the chunk is
+from the camera, and how far it has to be for it to be offscreen,
+using this it knows if it is onscreen*/
+function findOnscreenChunks(){
+    //if a chunk is greater than this distance from the camera then it is offscreen
+    let xdistance = (screenW/2) + (gameSize.chunk/2);
+    let ydistance = (screenH/2) + (gameSize.chunk/2);
+    //array to store the onscreen chunks, you can do for example onscreenChunks[0].x
+    /*[
+        {"x":1, "y":1},
+        {"x":2, "y":2}
+    ]*/
+    let onscreenChunks = [];
+    //chunks is an array with arrays within it
+    //to access a chunk you do chunks[x][y]
+    chunks.forEach((row, y) => {
+        row.forEach((chunk, x) => {
+            //calculate this chunks center
+            let xpos = (x+0.5)*gameSize.chunk;
+            let ypos = (y+0.5)*gameSize.chunk;
+            if(Math.abs(xpos-gameCamera.x) < xdistance && Math.abs(ypos-gameCamera.y) < ydistance){
+                onscreenChunks.push({"x":x, "y":y});
+            }
+        });
+    });
+    console.log(onscreenChunks.length + " currently loaded chunks")
+    return onscreenChunks
+}
+function drawchunks(OSchunks){
+    OSchunks.forEach((c) =>{
+        //make x and y varaibles for the chunk so i dont have to do c.
+        let x = c.x;
+        let y = c.y;
+        //if it is not already made
+        if(chunks[x][y] == ""){
+            console.log("creating chunk x:" +x+", y:" +y);
+            chunks[x][y] = new chunk({
+                startX: x*gameSize.chunk,
+                startY: y*gameSize.chunk,
+                endX: (x+1)*gameSize.chunk,
+                endY: (y+1)*gameSize.chunk,
+                color: "#C0F7B3",
+                seed: gameSeed*x*y,
+                treeNumber: 10
+            });
+        }
+        chunks[x][y].draw();
+    });
 }
 function tick() {
     //fps
     const now = performance.now();
     while (times.length > 0 && times[0] <= now - 1000) {
-      times.shift();
+        times.shift();
     }
     times.push(now);
     fps = times.length;
     //set ticks per hour to frames per second times seocnds per game hour(60)
     ticksPerHour = 60 * fps;
     //if fps is lower multiply by a higher number
-    movementComp = 60/fps;
-    //the other stuff
-    mainCharacter.move(movement.speed, movement.cx, movement.cy)
+    movementComp = 60 / fps;
+        mainCharacter.move(movement.speed, movement.cx, movement.cy)
     gameCamera.move(cameraSpeed, mainCharacter.x, mainCharacter.y);
     mainCharacter.tickSurvival();
     grass.draw();
+    //chunk stuff
+    let OSchunks = findOnscreenChunks();
+    //generate onscreen chunks if not already generated
+    drawchunks(OSchunks)
+    //the other stuff
     mainCharacter.draw();
-    //draw every plant
-    plants.forEach((plant) => plant.draw());
     bars.health.draw(mainCharacter.health, bars.hthColor);
     bars.hunger.draw(mainCharacter.hunger, bars.hngColor);
     bars.temp.draw(mainCharacter.temp, tempToColor(mainCharacter.temp));
-    drawText(fps, screenW-30, 20, 30);
+    drawText(fps, screenW - 30, 20, 30);
     //Object.keys(everything);
     window.requestAnimationFrame(tick);
 }

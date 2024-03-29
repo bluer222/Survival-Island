@@ -7,8 +7,6 @@ canvas.height = window.innerHeight;
 //variables to store canvas size
 var screenW = canvas.width;
 var screenH = canvas.height;
-//incremented by 1 every time a new random number
-var seedOffset = 0;
 //resize canvas when window is resized
 addEventListener('resize', () => {
   //set new size
@@ -20,10 +18,6 @@ addEventListener('resize', () => {
   screenW = canvas.width;
   screenH = canvas.height;
 });
-function insideScreen(x, y, width, height) {
-  //checks if its in the screen
-  return (x > (-screenW - width) && x < (screenW + width) && y > (-screenH - height) && y < (screenH + height))
-}
 function distanceToPoint(x1, y1, x2, y2) {
   return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
 }
@@ -32,36 +26,41 @@ function random(min, max) { //when you call the function put the minimum number,
   gameSeed = (gameSeed * 387420489 + 14348907) % 1e9;
   return Math.floor(getRandom(gameSeed) * (max - min + 1) + min);
 }
+function createArray(rows, columns) {
+  let array = [];
 
+  for (let i = 0; i < rows; i++) {
+    array[i] = [];
+    for (let j = 0; j < columns; j++) {
+      array[i][j] = "";
+    }
+  }
+  return array;
+}
 function isEven(n) {
   return n % 2 == 0;
 }
 //draws a rectangle
 function rect(x, y, width, height) {
   //create gameoffset, this compensates for the screensize, the gamesize, and the object size, so its centered
-  let gameXOffset = gameCamera.x - (screenW/2) + (width/2);
-  let gameYOffset = gameCamera.y - (screenH/2) + (height/2);
-  //is it on screen
-  if (insideScreen(x-gameXOffset, y-gameYOffset, width, height)) {
-    //draw it 
-    draw.fillRect(x-gameXOffset, y-gameYOffset, width, height);
-  }
+  let gameXOffset = gameCamera.x - (screenW / 2);
+  let gameYOffset = gameCamera.y - (screenH / 2);
+  //draw it 
+  draw.fillRect(x - gameXOffset, y - gameYOffset, width, height);
 }
 //draws a rounded rectangle
 function rRect(x, y, width, height, radius) {
   //create gameoffset, this compensates for the screensize, the gamesize, and the object size, so its centered
-  let gameXOffset = gameCamera.x - (screenW/2) + (width/2);
-  let gameYOffset = gameCamera.y - (screenH/2) + (height/2);
-  //is it on screen
-  if (insideScreen(x-gameXOffset, y-gameYOffset, width, height)) {
-    //draw it 
-    draw.beginPath();
-    draw.roundRect(x-gameXOffset, y-gameYOffset, width, height, radius);
-    draw.fill();
-  }
+  let gameXOffset = gameCamera.x - (screenW / 2) + (width / 2);
+  let gameYOffset = gameCamera.y - (screenH / 2) + (height / 2);
+
+  //draw it 
+  draw.beginPath();
+  draw.roundRect(x - gameXOffset, y - gameYOffset, width, height, radius);
+  draw.fill();
 }
 //draws text
-function drawText(text, x, y, maxWidth){
+function drawText(text, x, y, maxWidth) {
   setcolor("black");
   draw.font = "20px arial";
   draw.fillText(text, x, y, maxWidth)
@@ -69,36 +68,39 @@ function drawText(text, x, y, maxWidth){
 //draws a line
 function line(x, y, x2, y2, thickness) {
   //create gameoffset, this compensates for the screensize, the gamesize, and the object size, so its centered
-  let gameXOffset = gameCamera.x - (screenW/2);
-  let gameYOffset = gameCamera.y - (screenH/2);
-  //is it on screen
-  if (insideScreen(x-gameXOffset, y-gameYOffset, 0, 0) || insideScreen(x2-gameXOffset, y2-gameYOffset, 0, 0)) {
-    //draw it 
-    draw.beginPath();
-    draw.moveTo(x-gameXOffset, y-gameYOffset);
-    draw.lineTo(x2-gameXOffset, y2-gameYOffset);
-    draw.lineWidth = thickness;
-draw.stroke();
-draw.lineWidth = 1;
-  }
+  let gameXOffset = gameCamera.x - (screenW / 2);
+  let gameYOffset = gameCamera.y - (screenH / 2);
+  //draw it 
+  draw.beginPath();
+  draw.moveTo(x - gameXOffset, y - gameYOffset);
+  draw.lineTo(x2 - gameXOffset, y2 - gameYOffset);
+  draw.lineWidth = thickness;
+  draw.stroke();
+  draw.lineWidth = 1;
 }
 //makes a border for a recangle without offset
 function borderRect(x, y, width, height) { //draws a border
-      //is it on screen
-  if (insideScreen(x, y, width, height)) {
-    draw.strokeRect(x, y, width, height);
-  }
+  //create gameoffset, this compensates for the screensize, the gamesize, and the object size, so its centered
+  let gameXOffset = gameCamera.x - (screenW / 2);
+  let gameYOffset = gameCamera.y - (screenH / 2);
+
+  //draw it 
+  draw.strokeRect(x - gameXOffset, y - gameYOffset, width, height);
+
+}
+//makes a border for a recangle without offset
+function stborderRect(x, y, width, height) { //draws a border
+  //drawit
+  draw.strokeRect(x, y, width, height);
+
 }
 
 //draws a rectange without offset
 function staticRect(x, y, width, height) {
-  //is it on screen
-  if (insideScreen(x, y, width, height)) {
-    //draw it 
-    draw.fillRect(x, y, width, height);
-  }
+  //draw it 
+  draw.fillRect(x, y, width, height);
 }
-function setcolor(color){
+function setcolor(color) {
   draw.fillStyle = color;
   draw.strokeStyle = color;
 
@@ -106,15 +108,13 @@ function setcolor(color){
 //draws an elipse
 function circle(x, y, width, height) {
   //create gameoffset, this compensates for the screensize, the gamesize, and the object size, so its centered
-  let gameXOffset = gameCamera.x - (screenW/2);
-  let gameYOffset = gameCamera.y - (screenH/2);
-    //is it on screen
-  if (insideScreen(x-gameXOffset, y-gameYOffset, width, height)) {
-    //draw it 
-    draw.beginPath();
-    draw.ellipse(x-gameXOffset, y-gameYOffset, width/2, height/2, Math.PI, 0, 2 * Math.PI);
-    draw.fill();
-  }
+  let gameXOffset = gameCamera.x - (screenW / 2);
+  let gameYOffset = gameCamera.y - (screenH / 2);
+  //draw it 
+  draw.beginPath();
+  draw.ellipse(x - gameXOffset, y - gameYOffset, width / 2, height / 2, Math.PI, 0, 2 * Math.PI);
+  draw.fill();
+
 }
 //if number is > max it becomse max, if number < min it becomes min
 function clamp(number, min, max) {
@@ -136,7 +136,4 @@ function getRandom(seed) {
   seed ^= seed << 4;
   seed = BigInt(seed) * 2685821657736338717n;
   return Number((seed < 0 ? ~seed + 1n : seed) % BigInt(1e9)) / 1e9;
-}
-function negOrPos(){
-  return random(0, 1) < 0.5 ? -1 : 1
 }

@@ -1,8 +1,8 @@
 class player {
     constructor(healing) {
         //center location
-        this.x = (gameSize.x / 2);
-        this.y = (gameSize.y / 2);
+        this.x = ((gameSize.x * gameSize.chunk) / 2);
+        this.y = ((gameSize.y * gameSize.chunk) / 2);
         //hunger, 0=very hungry 100=full
         this.hunger = 100;
         //tempature, 100=on fire 0=frozen (50 perfered)
@@ -14,6 +14,8 @@ class player {
             //deffault ammount hunger and temp go down each hour
             hungerRate: healing.hungerRate,
             tempRate: healing.tempRate,
+            //how much extra your hunger goes down when sprinting
+            sprintRate: 10,
             //healing will be fastest with hunger and temp at these values
             bestHunger: healing.bestHunger,
             bestTemp: healing.bestTemp,
@@ -22,7 +24,7 @@ class player {
             healDifficulty: healing.healDifficulty,
             //how quickly your health goes up or down
             healRate: healing.healRate
-        };        
+        };
         //ticks per game hour(60 ticks a second, 60 seconds per game hour)
         this.healScore = 0;
     }
@@ -42,7 +44,7 @@ class player {
         this.hunger -= (this.healing.hungerRate / ticksPerHour);
         //decreace tempeture
         this.temp -= (this.healing.tempRate / ticksPerHour);
-        
+
         //difference between optimal and current temp
         const tempDiff = Math.abs(this.healing.bestTemp - this.temp);
         //difference between optimal and current hunger
@@ -53,12 +55,12 @@ class player {
         const tempFraction = tempDiff / this.healing.bestTemp;
         const hungerFraction = hungerDiff / this.healing.bestHunger;
         //convert the individual fractions to one fraction on the same scale
-        const healScoreFraction = (tempFraction + hungerFraction)/2;
+        const healScoreFraction = (tempFraction + hungerFraction) / 2;
         //right now healing is just as easy as losing health, this is too easy, fix it by multiplying by healdifficulty
         //the best case stays as 0 but the wort case becomes healdifficulty
         const scaledHealScoreFraction = healScoreFraction * this.healing.healDifficulty;
         //subtract it from 1, now the best would be 1 and the worst would be 1-healDifficulty
-        this.healScore =  1 - scaledHealScoreFraction
+        this.healScore = 1 - scaledHealScoreFraction
         //max healing ammount
         const maxHeal = 20;
         //change health, see now that best case would be you heal the value of maxheal
@@ -83,38 +85,82 @@ class bar {
     }
     draw(fillLevel, color) {
         setcolor(color);
-        borderRect(this.x, this.y, this.width, this.height);
+        stborderRect(this.x, this.y, this.width, this.height);
         staticRect(this.x + 2, this.y + 2, (this.width * (fillLevel / 100)) - 4, this.height - 4);
     }
 }
+class chunk {
+    rndLocInChunk(xory) {
+        if (xory == "x") {
+            return this.random(this.startX, this.endX)
+        } else {
+            return this.random(this.startY, this.endY)
+        }
+    }
+    constructor(property) {
+        this.startX = property.startX;
+        this.startY = property.startY;
+        this.endX = property.endX;
+        this.endY = property.endY;
+        this.color = property.color;
+        this.seed = property.seed;
+        this.plants = [];
+        for (let i = 0; i < property.treeNumber; i++) {
+            this.plants.push(
+                new tree(this.rndLocInChunk("x"), this.rndLocInChunk("y"), i * this.seed)
+            );
+        }
+    }
+    draw() {
+        //draw chunk
+        setcolor("black");
+        borderRect(this.startX, this.startY, gameSize.chunk, gameSize.chunk);
+        //go through each plant and for that plant run draw
+        this.plants.forEach((plant) => plant.draw());
+    }
+    //random function for the chunk that uses the chunks seed
+    random(min, max) {
+        this.seed = (this.seed * 387420489 + 14348907) % 1e9;
+        return Math.floor(getRandom(this.seed) * (max - min + 1) + min);
+    }
+}
 class tree {
-    constructor(x, y) {
+    constructor(x, y, seed) {
+        this.seed = seed;
         //create branches object with the center branch
         this.branches = {
             x: [x],
             y: [y],
-            size: [random(75, 100)],
-            innerXOffset: [random(0, 8)],
-            innerYOffset: [random(-8, 0)],
+            size: [this.random(75, 100)],
+            innerXOffset: [this.random(0, 8)],
+            innerYOffset: [this.random(-8, 0)],
         };
         //number of side brancehs
-        this.branchNumber = random(0, 3) + 1;
+        this.branchNumber = this.random(0, 3) + 1;
         //how far the branches have to be from main branch
         const mainSize = this.branches.size[0] / 2
         //create the branches
         for (let i = 1; i < this.branchNumber; i++) {
-            this.branches.size.push(random(40, 50));
+            this.branches.size.push(this.random(40, 50));
             const minDist = mainSize + (this.branches.size[i] / 2);
-            if (random(1, 2) == 1) {
-                this.branches.x.push(x + (minDist + 12) * negOrPos())
-                this.branches.y.push(y + random(-minDist, minDist));
+            if (this.random(1, 2) == 1) {
+                this.branches.x.push(x + (minDist + 12) * this.negOrPos())
+                this.branches.y.push(y + this.random(-minDist, minDist));
             } else {
-                this.branches.y.push(y + (minDist + 12) * negOrPos())
-                this.branches.x.push(x + random(-minDist, minDist));
+                this.branches.y.push(y + (minDist + 12) * this.negOrPos())
+                this.branches.x.push(x + this.random(-minDist, minDist));
             }
-            this.branches.innerYOffset.push(random(-8, 0));
-            this.branches.innerXOffset.push(random(0, 8));
+            this.branches.innerYOffset.push(this.random(-8, 0));
+            this.branches.innerXOffset.push(this.random(0, 8));
         }
+    }
+    negOrPos() {
+        return this.random(0, 1) < 0.5 ? -1 : 1
+    }
+    //random function for the tree that uses the trees seed
+    random(min, max) {
+        this.seed = (this.seed * 387420489 + 14348907) % 1e9;
+        return Math.floor(getRandom(this.seed) * (max - min + 1) + min);
     }
     draw() {
         //draw shadow
@@ -165,25 +211,25 @@ class backround {
     constructor(color) {
         //center location
         this.color = color;
-        this.x = (gameSize.x / 2);
-        this.y = (gameSize.y / 2);
+        this.x = 0;
+        this.y = 0;
     }
     draw() {
         setcolor(this.color);
-        rect(this.x, this.y, gameSize.x, gameSize.y);
+        rect(this.x, this.y, gameSize.x * gameSize.chunk, gameSize.y * gameSize.chunk);
     }
 }
 class camera {
     constructor() {
         //center location
-        this.x = (gameSize.x / 2);
-        this.y = (gameSize.y / 2);
+        this.x = ((gameSize.x * gameSize.chunk) / 2);
+        this.y = ((gameSize.y * gameSize.chunk) / 2);
         this.xMomentum = 0;
         this.yMomentum = 0;
     }
     move(cameraSpeed, goalx, goaly) {
-        this.xMomentum = ((goalx - this.x) / cameraSpeed)*movementComp;
-        this.yMomentum = ((goaly - this.y) / cameraSpeed)*movementComp;
+        this.xMomentum = ((goalx - this.x) / cameraSpeed) * movementComp;
+        this.yMomentum = ((goaly - this.y) / cameraSpeed) * movementComp;
         this.x += this.xMomentum;
         this.y += this.yMomentum;
     }
