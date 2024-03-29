@@ -3,6 +3,14 @@ var gameSize = {
     x: 10000,
     y: 10000
 };
+//fps counter
+var times = [];
+var fps;
+//number of ticks per hour, used to run hourly things every tick instead(like hunger)
+var ticksPerHour;
+//multiply things that run 60 times a second by this to compensate for lower fps
+var movementComp;
+//healing default config
 var healing = {
     //ammount hunger and temp go down each hour by default(can be changed by spriting or whatever)
     hungerRate: 10,
@@ -168,7 +176,7 @@ function start() {
     mainCharacter = new player(healing);
     grass = new backround("#C0F7B3");
 
-    for(let i = 0; i < 100; i++){
+    for(let i = 0; i < 10000; i++){
         plants.push(new tree(random(0, gameSize.x), random(0, gameSize.x)))
     }
         //start the clock
@@ -201,16 +209,29 @@ function tempToColor(temperature) {
     return "rgb(" + r + ", " + g + ", " + b + ")" 
 }
 function tick() {
+    //fps
+    const now = performance.now();
+    while (times.length > 0 && times[0] <= now - 1000) {
+      times.shift();
+    }
+    times.push(now);
+    fps = times.length;
+    //set ticks per hour to frames per second times seocnds per game hour(60)
+    ticksPerHour = 60 * fps;
+    //if fps is lower multiply by a higher number
+    movementComp = 60/fps;
+    //the other stuff
     mainCharacter.move(movement.speed, movement.cx, movement.cy)
     gameCamera.move(cameraSpeed, mainCharacter.x, mainCharacter.y);
     mainCharacter.tickSurvival();
     grass.draw();
     mainCharacter.draw();
+    //draw every plant
+    plants.forEach((plant) => plant.draw());
     bars.health.draw(mainCharacter.health, bars.hthColor);
     bars.hunger.draw(mainCharacter.hunger, bars.hngColor);
     bars.temp.draw(mainCharacter.temp, tempToColor(mainCharacter.temp));
-    //draw every plant
-    plants.forEach((plant) => plant.draw());
+    drawText(fps, screenW-30, 20, 30);
     //Object.keys(everything);
     window.requestAnimationFrame(tick);
 }

@@ -60,13 +60,11 @@ function rRect(x, y, width, height, radius) {
     draw.fill();
   }
 }
-function distanceToClosestBoundary(number, min, max) {
-  // Calculate the distance to the min and max
-  const distanceToMin = Math.abs(number - min);
-  const distanceToMax = Math.abs(number - max);
-
-  // Return the smaller distance
-  return Math.min(distanceToMin, distanceToMax);
+//draws text
+function drawText(text, x, y, maxWidth){
+  setcolor("black");
+  draw.font = "20px arial";
+  draw.fillText(text, x, y, maxWidth)
 }
 //draws a line
 function line(x, y, x2, y2, thickness) {

@@ -24,7 +24,6 @@ class player {
             healRate: healing.healRate
         };        
         //ticks per game hour(60 ticks a second, 60 seconds per game hour)
-        this.ticksPerHour = 60 * 60;
         this.healScore = 0;
     }
     draw() {
@@ -32,15 +31,17 @@ class player {
         circle(this.x, this.y, 50, 50);
     }
     move(speed, movementx, movementy) {
-        this.x += movementx * speed; // Apply movement with adjusted speed
-        this.y += movementy * speed;
+        // Apply movement with adjusted speed
+        //multiplyt by 60/fps so that if fps is lower than 60 it will go faster
+        this.x += movementx * speed * movementComp;
+        this.y += movementy * speed * movementComp;
     }
     //this function runs every tick so changes must be devided by the number of ticks in an hour
     tickSurvival() {
         //increase hunger
-        this.hunger -= (this.healing.hungerRate / this.ticksPerHour);
+        this.hunger -= (this.healing.hungerRate / ticksPerHour);
         //decreace tempeture
-        this.temp -= (this.healing.tempRate / this.ticksPerHour);
+        this.temp -= (this.healing.tempRate / ticksPerHour);
         
         //difference between optimal and current temp
         const tempDiff = Math.abs(this.healing.bestTemp - this.temp);
@@ -62,7 +63,7 @@ class player {
         const maxHeal = 20;
         //change health, see now that best case would be you heal the value of maxheal
         //but worst case you loze healdifficutly times maxheal
-        this.health += (maxHeal * this.healScore) / this.ticksPerHour
+        this.health += (maxHeal * this.healScore) / ticksPerHour
         //make the values be in between 0 and 100
         this.health = clamp(this.health, 0, 100);
         this.hunger = clamp(this.hunger, 0, 100);
@@ -181,8 +182,8 @@ class camera {
         this.yMomentum = 0;
     }
     move(cameraSpeed, goalx, goaly) {
-        this.xMomentum = (goalx - this.x) / cameraSpeed;
-        this.yMomentum = (goaly - this.y) / cameraSpeed;
+        this.xMomentum = ((goalx - this.x) / cameraSpeed)*movementComp;
+        this.yMomentum = ((goaly - this.y) / cameraSpeed)*movementComp;
         this.x += this.xMomentum;
         this.y += this.yMomentum;
     }
