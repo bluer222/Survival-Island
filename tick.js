@@ -3,6 +3,8 @@ var times = [];
 var fps;
 //number of ticks per hour, used to run hourly things every tick instead(like hunger)
 var ticksPerHour;
+//number of ticks per second, used for secondly things(clock)
+var ticksPerSecond; 
 //multiply things that run 60 times a second by this to compensate for lower fps
 var movementComp;
 //list that will store all the plants in the world
@@ -75,11 +77,6 @@ var mainCharacter = new player({
 var chunks = createArray(gameSize.x, gameSize.y);
 //world creation
 function start() {
-    //start the clock
-    setInterval(() => {
-        updateClock();
-        //other time based stuff
-    }, 1000)
     tick();
 }
 //detect keydown
@@ -132,9 +129,9 @@ document.addEventListener('keyup', (e) => {
 });
 function updateClock() {
     //one minute passes
-    clock.minute += 1;
+    clock.minute += 1/ticksPerSecond;
     //if its an hour
-    if (clock.minute == 60) {
+    if (clock.minute >= 60) {
         clock.minute = 1;
         clock.hour += 1;
     }
@@ -204,50 +201,42 @@ function tempToColor(temperature) {
 /*it finds how far the center of the chunk is
 from the camera, and how far it has to be for it to be offscreen,
 using this it knows if it is onscreen*/
-function findOnscreenChunks(){
+function drawchunks(){
     //if a chunk is greater than this distance from the camera then it is offscreen
-    let xdistance = (screenW/2) + (gameSize.chunk/2);
-    let ydistance = (screenH/2) + (gameSize.chunk/2);
-    //array to store the onscreen chunks, you can do for example onscreenChunks[0].x
-    /*[
-        {"x":1, "y":1},
-        {"x":2, "y":2}
-    ]*/
-    let onscreenChunks = [];
+    //add on 100 pixels for when trees stick out of the border
+    let xdistance = (screenW/2) + (gameSize.chunk/2) + 100;
+    let ydistance = (screenH/2) + (gameSize.chunk/2) + 100;
+    //number of loaded chunks
+    let onscreenChunks = 0;
     //chunks is an array with arrays within it
     //to access a chunk you do chunks[x][y]
+    //cycle through the rows
     chunks.forEach((row, y) => {
-        row.forEach((chunk, x) => {
+        //cycle through the chunks in a row
+        row.forEach((currentChunk, x) => {
             //calculate this chunks center
             let xpos = (x+0.5)*gameSize.chunk;
             let ypos = (y+0.5)*gameSize.chunk;
+            //is it close enough?
             if(Math.abs(xpos-gameCamera.x) < xdistance && Math.abs(ypos-gameCamera.y) < ydistance){
-                onscreenChunks.push({"x":x, "y":y});
+                //if its undefined then generate it
+                if(chunks[x][y] == ""){
+                    console.log("creating chunk x:" +x+", y:" +y);
+                    chunks[x][y] = new chunk({
+                        startX: x*gameSize.chunk,
+                        startY: y*gameSize.chunk,
+                        endX: (x+1)*gameSize.chunk,
+                        endY: (y+1)*gameSize.chunk,
+                        color: "#C0F7B3",
+                        seed: gameSeed*x*y,
+                        treeNumber: 10
+                    });
+                }
+                onscreenChunks += 1;
+                //draw the chunk
+                chunks[x][y].draw();
             }
         });
-    });
-    console.log(onscreenChunks.length + " currently loaded chunks")
-    return onscreenChunks
-}
-function drawchunks(OSchunks){
-    OSchunks.forEach((c) =>{
-        //make x and y varaibles for the chunk so i dont have to do c.
-        let x = c.x;
-        let y = c.y;
-        //if it is not already made
-        if(chunks[x][y] == ""){
-            console.log("creating chunk x:" +x+", y:" +y);
-            chunks[x][y] = new chunk({
-                startX: x*gameSize.chunk,
-                startY: y*gameSize.chunk,
-                endX: (x+1)*gameSize.chunk,
-                endY: (y+1)*gameSize.chunk,
-                color: "#C0F7B3",
-                seed: gameSeed*x*y,
-                treeNumber: 10
-            });
-        }
-        chunks[x][y].draw();
     });
 }
 function tick() {
@@ -260,16 +249,17 @@ function tick() {
     fps = times.length;
     //set ticks per hour to frames per second times seocnds per game hour(60)
     ticksPerHour = 60 * fps;
+        //set ticks per second to frames per second
+        ticksPerSecond = 60 * fps;
     //if fps is lower multiply by a higher number
     movementComp = 60 / fps;
+    updateClock();
         mainCharacter.move(movement.speed, movement.cx, movement.cy)
     gameCamera.move(cameraSpeed, mainCharacter.x, mainCharacter.y);
     mainCharacter.tickSurvival();
     grass.draw();
-    //chunk stuff
-    let OSchunks = findOnscreenChunks();
-    //generate onscreen chunks if not already generated
-    drawchunks(OSchunks)
+    //finds onscreen chunks, if not generated generate them, then render them
+    drawchunks();
     //the other stuff
     mainCharacter.draw();
     bars.health.draw(mainCharacter.health, bars.hthColor);

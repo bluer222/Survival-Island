@@ -187,7 +187,6 @@ class tree {
             rRect(this.branches.x[i], this.branches.y[i], this.branches.size[i], this.branches.size[i], 10);
         }
         setcolor("#1f7c43");
-
         //draw innerleaves
         for (let i = 0; i < this.branches.x.length; i++) {
             rRect(this.branches.x[i] + this.branches.innerXOffset[i], this.branches.y[i] + this.branches.innerYOffset[i], this.branches.size[i] - 20, this.branches.size[i] - 20, 10);
