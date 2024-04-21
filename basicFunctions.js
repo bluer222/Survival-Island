@@ -1,23 +1,35 @@
+const worldZoom = 1;//zoom out the camera without rendering farther to test the chunk loading
 //get canvas element
 const canvas = document.getElementById("game");
 const draw = canvas.getContext("2d");
 //set canvas size
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+canvas.width = window.innerWidth*worldZoom;
+canvas.height = window.innerHeight*worldZoom;
+//set canvas size
+canvas.style.width = window.innerWidth;
+canvas.style.height = window.innerHeight;
 //variables to store canvas size
-var screenW = canvas.width;
-var screenH = canvas.height;
+var screenW = window.innerWidth;
+var screenH = window.innerHeight;
 //resize canvas when window is resized
 addEventListener('resize', () => {
   //set new size
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  canvas.width = window.innerWidth*worldZoom;
+  canvas.height = window.innerHeight*worldZoom;
+  //set canvas size
+canvas.style.width = window.innerWidth;
+canvas.style.height = window.innerHeight;
   //resets transforms
   draw.setTransform(1, 0, 0, 1, 0, 0);
   //update canvas size
-  screenW = canvas.width;
-  screenH = canvas.height;
+  screenW = window.innerWidth;
+  screenH = window.innerHeight;
 });
+function insideScreen(x, y, width, height) {
+  //checks if a thing is on the screen(we dont need to render it if not)
+  //this gains about 1 fps
+  return (x > (-width) && x < (screenW) && y > (- height) && y < (screenH))
+}
 function distanceToPoint(x1, y1, x2, y2) {
   return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
 }
@@ -43,21 +55,24 @@ function isEven(n) {
 //draws a rectangle
 function rect(x, y, width, height) {
   //create gameoffset, this compensates for the screensize, the gamesize, and the object size, so its centered
-  let gameXOffset = gameCamera.x - (screenW / 2);
-  let gameYOffset = gameCamera.y - (screenH / 2);
+  let gameXOffset = gameCamera.x - (screenW*worldZoom / 2);
+  let gameYOffset = gameCamera.y - (screenH*worldZoom / 2);
+  if (insideScreen(x-gameXOffset, y-gameYOffset, width, height)) {
   //draw it 
   draw.fillRect(x - gameXOffset, y - gameYOffset, width, height);
+  }
 }
 //draws a rounded rectangle
 function rRect(x, y, width, height, radius) {
   //create gameoffset, this compensates for the screensize, the gamesize, and the object size, so its centered
-  let gameXOffset = gameCamera.x - (screenW / 2) + (width / 2);
-  let gameYOffset = gameCamera.y - (screenH / 2) + (height / 2);
-
+  let gameXOffset = gameCamera.x - (screenW*worldZoom / 2) + (width/2);
+  let gameYOffset = gameCamera.y - (screenH*worldZoom / 2) + (height/2);
+  if (insideScreen(x-gameXOffset, y-gameYOffset, width, height)) {
   //draw it 
   draw.beginPath();
   draw.roundRect(x - gameXOffset, y - gameYOffset, width, height, radius);
   draw.fill();
+  }
 }
 //draws text
 function drawText(text, x, y, maxWidth) {
@@ -68,8 +83,9 @@ function drawText(text, x, y, maxWidth) {
 //draws a line
 function line(x, y, x2, y2, thickness) {
   //create gameoffset, this compensates for the screensize, the gamesize, and the object size, so its centered
-  let gameXOffset = gameCamera.x - (screenW / 2);
-  let gameYOffset = gameCamera.y - (screenH / 2);
+  let gameXOffset = gameCamera.x - (screenW*worldZoom / 2);
+  let gameYOffset = gameCamera.y - (screenH*worldZoom / 2);
+  if (insideScreen(x-gameXOffset, y-gameYOffset,   0, 0) || insideScreen(x2-gameXOffset, y2-gameYOffset,   0, 0)) {
   //draw it 
   draw.beginPath();
   draw.moveTo(x - gameXOffset, y - gameYOffset);
@@ -77,15 +93,17 @@ function line(x, y, x2, y2, thickness) {
   draw.lineWidth = thickness;
   draw.stroke();
   draw.lineWidth = 1;
+  }
 }
 //makes a border for a recangle without offset
 function borderRect(x, y, width, height) { //draws a border
-  //create gameoffset, this compensates for the screensize, the gamesize, and the object size, so its centered
-  let gameXOffset = gameCamera.x - (screenW / 2);
-  let gameYOffset = gameCamera.y - (screenH / 2);
-
+  //create gameoffset, this compensates for the screensize(center of the screen is 0,0)
+  let gameXOffset = gameCamera.x - (screenW*worldZoom / 2);
+  let gameYOffset = gameCamera.y - (screenH*worldZoom / 2);
+  if (insideScreen(x-gameXOffset, y-gameYOffset, width, height)) {
   //draw it 
   draw.strokeRect(x - gameXOffset, y - gameYOffset, width, height);
+  }
 
 }
 //makes a border for a recangle without offset
@@ -108,8 +126,8 @@ function setcolor(color) {
 //draws an elipse
 function circle(x, y, width, height) {
   //create gameoffset, this compensates for the screensize, the gamesize, and the object size, so its centered
-  let gameXOffset = gameCamera.x - (screenW / 2);
-  let gameYOffset = gameCamera.y - (screenH / 2);
+  let gameXOffset = gameCamera.x - (screenW*worldZoom / 2);
+  let gameYOffset = gameCamera.y - (screenH*worldZoom / 2);
   //draw it 
   draw.beginPath();
   draw.ellipse(x - gameXOffset, y - gameYOffset, width / 2, height / 2, Math.PI, 0, 2 * Math.PI);

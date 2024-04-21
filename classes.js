@@ -90,8 +90,8 @@ class bar {
     }
 }
 class chunk {
-    rndLocInChunk(xory) {
-        if (xory == "x") {
+    rndLocInChunk(XorY) {
+        if (XorY == "x") {
             return this.random(this.startX, this.endX)
         } else {
             return this.random(this.startY, this.endY)

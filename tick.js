@@ -202,10 +202,7 @@ function tempToColor(temperature) {
 from the camera, and how far it has to be for it to be offscreen,
 using this it knows if it is onscreen*/
 function drawchunks(){
-    //if a chunk is greater than this distance from the camera then it is offscreen
-    //add on 100 pixels for when trees stick out of the border
-    let xdistance = (screenW/2) + (gameSize.chunk/2) + 100;
-    let ydistance = (screenH/2) + (gameSize.chunk/2) + 100;
+    let start = performance.now();
     //number of loaded chunks
     let onscreenChunks = 0;
     //chunks is an array with arrays within it
@@ -214,11 +211,11 @@ function drawchunks(){
     chunks.forEach((row, y) => {
         //cycle through the chunks in a row
         row.forEach((currentChunk, x) => {
-            //calculate this chunks center
-            let xpos = (x+0.5)*gameSize.chunk;
-            let ypos = (y+0.5)*gameSize.chunk;
             //is it close enough?
-            if(Math.abs(xpos-gameCamera.x) < xdistance && Math.abs(ypos-gameCamera.y) < ydistance){
+             //create gameoffset, this compensates for the screensize, and the camera pos
+            let gameXOffset = gameCamera.x - (screenW / 2);
+            let gameYOffset = gameCamera.y - (screenH / 2);
+            if(insideScreen(x*gameSize.chunk-gameXOffset, y*gameSize.chunk-gameYOffset, gameSize.chunk, gameSize.chunk)/*Math.abs(xpos-gameCamera.x) < xdistance && Math.abs(ypos-gameCamera.y) < ydistance*/){
                 //if its undefined then generate it
                 if(chunks[x][y] == ""){
                     console.log("creating chunk x:" +x+", y:" +y);
@@ -238,8 +235,11 @@ function drawchunks(){
             }
         });
     });
+    console.log("chunks took " + (performance.now()-start) + " ms");
+    console.log(onscreenChunks + " loaded chunks");
 }
 function tick() {
+    let start = performance.now();
     //fps
     const now = performance.now();
     while (times.length > 0 && times[0] <= now - 1000) {
@@ -268,5 +268,7 @@ function tick() {
     drawText(fps, screenW - 30, 20, 30);
     //Object.keys(everything);
     window.requestAnimationFrame(tick);
+    console.log("tick took " + (performance.now()-start) + "ms");
+
 }
 start();
