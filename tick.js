@@ -1,6 +1,8 @@
 //fps counter
 var times = [];
 var fps;
+//onscreen chunks
+var onscreenChunks = [];
 //number of ticks per hour, used to run hourly things every tick instead(like hunger)
 var ticksPerHour;
 //number of ticks per second, used for secondly things(clock)
@@ -201,16 +203,18 @@ function tempToColor(temperature) {
 /*it finds how far the center of the chunk is
 from the camera, and how far it has to be for it to be offscreen,
 using this it knows if it is onscreen*/
-function drawchunks(){
+function findChunks(){
     let start = performance.now();
-    //number of loaded chunks
-    let onscreenChunks = 0;
+    //loaded chunks
+    onscreenChunks = [];
     //chunks is an array with arrays within it
     //to access a chunk you do chunks[x][y]
     //cycle through the rows
     chunks.forEach((row, y) => {
         //cycle through the chunks in a row
         row.forEach((currentChunk, x) => {
+            //move the stuff in the chunk etc
+            //runChunkActions();
             //is it close enough?
              //create gameoffset, this compensates for the screensize, and the camera pos
             let gameXOffset = gameCamera.x - (screenW / 2);
@@ -229,17 +233,53 @@ function drawchunks(){
                         treeNumber: 10
                     });
                 }
-                onscreenChunks += 1;
-                //draw the chunk
-                chunks[x][y].draw();
+                onscreenChunks.push(chunks[x][y]);
             }
         });
     });
     console.log("chunks took " + (performance.now()-start) + " ms");
-    console.log(onscreenChunks + " loaded chunks");
+    console.log(onscreenChunks.length + " loaded chunks");
 }
-function tick() {
+function renderStuff(thingsToRender){
     let start = performance.now();
+    draw.beginPath();
+    setcolor("rgba(12,46,32,0.5)");
+    thingsToRender.forEach((plant) => plant.shadow());
+    draw.fill();
+
+    draw.beginPath();
+    setcolor("#4d2d14");
+    draw.lineWidth = 18;
+    thingsToRender.forEach((plant) => plant.dbranches());
+    draw.stroke();
+
+    draw.beginPath();
+    setcolor("#08562e");
+    thingsToRender.forEach((plant) => plant.lOutline());
+    draw.fill();
+
+    draw.beginPath();
+    setcolor("#096e40");
+    thingsToRender.forEach((plant) => plant.leaves());
+    draw.fill();
+
+    draw.beginPath();
+    setcolor("#096e40");
+    thingsToRender.forEach((plant) => plant.lInside());
+    draw.fill();
+
+    draw.lineWidth = 2;
+    draw.beginPath();
+    setcolor("#000000");
+    onscreenChunks.forEach((chunk) => {
+        chunk.draw();
+    });
+    draw.stroke();
+    console.log("render took " + (performance.now()-start) + " ms");
+
+}
+
+function tick() {
     //fps
     const now = performance.now();
     while (times.length > 0 && times[0] <= now - 1000) {
@@ -258,8 +298,15 @@ function tick() {
     gameCamera.move(cameraSpeed, mainCharacter.x, mainCharacter.y);
     mainCharacter.tickSurvival();
     grass.draw();
-    //finds onscreen chunks, if not generated generate them, then render them
-    drawchunks();
+    //finds onscreen chunks, if not generated generate them
+    findChunks();
+    //combine all of the stuff to render onto one list
+    let thingsToRender = [];
+    onscreenChunks.forEach((chunk) => {
+        thingsToRender = thingsToRender.concat(chunk.plants);
+    });
+    //render
+    renderStuff(thingsToRender);
     //the other stuff
     mainCharacter.draw();
     bars.health.draw(mainCharacter.health, bars.hthColor);
@@ -268,7 +315,5 @@ function tick() {
     drawText(fps, screenW - 30, 20, 30);
     //Object.keys(everything);
     window.requestAnimationFrame(tick);
-    console.log("tick took " + (performance.now()-start) + "ms");
-
 }
 start();

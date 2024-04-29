@@ -59,7 +59,7 @@ function rect(x, y, width, height) {
   let gameYOffset = gameCamera.y - (screenH*worldZoom / 2);
   if (insideScreen(x-gameXOffset, y-gameYOffset, width, height)) {
   //draw it 
-  draw.fillRect(x - gameXOffset, y - gameYOffset, width, height);
+  draw.rect(x - gameXOffset, y - gameYOffset, width, height);
   }
 }
 //draws a rounded rectangle
@@ -69,9 +69,9 @@ function rRect(x, y, width, height, radius) {
   let gameYOffset = gameCamera.y - (screenH*worldZoom / 2) + (height/2);
   if (insideScreen(x-gameXOffset, y-gameYOffset, width, height)) {
   //draw it 
-  draw.beginPath();
+  //draw.beginPath();
   draw.roundRect(x - gameXOffset, y - gameYOffset, width, height, radius);
-  draw.fill();
+ // draw.fill();
   }
 }
 //draws text
@@ -81,18 +81,13 @@ function drawText(text, x, y, maxWidth) {
   draw.fillText(text, x, y, maxWidth)
 }
 //draws a line
-function line(x, y, x2, y2, thickness) {
+function line(x, y, x2, y2) {
   //create gameoffset, this compensates for the screensize, the gamesize, and the object size, so its centered
   let gameXOffset = gameCamera.x - (screenW*worldZoom / 2);
   let gameYOffset = gameCamera.y - (screenH*worldZoom / 2);
   if (insideScreen(x-gameXOffset, y-gameYOffset,   0, 0) || insideScreen(x2-gameXOffset, y2-gameYOffset,   0, 0)) {
-  //draw it 
-  draw.beginPath();
   draw.moveTo(x - gameXOffset, y - gameYOffset);
   draw.lineTo(x2 - gameXOffset, y2 - gameYOffset);
-  draw.lineWidth = thickness;
-  draw.stroke();
-  draw.lineWidth = 1;
   }
 }
 //makes a border for a recangle without offset
@@ -102,21 +97,21 @@ function borderRect(x, y, width, height) { //draws a border
   let gameYOffset = gameCamera.y - (screenH*worldZoom / 2);
   if (insideScreen(x-gameXOffset, y-gameYOffset, width, height)) {
   //draw it 
-  draw.strokeRect(x - gameXOffset, y - gameYOffset, width, height);
+  draw.rect(x - gameXOffset, y - gameYOffset, width, height);
   }
 
 }
 //makes a border for a recangle without offset
 function stborderRect(x, y, width, height) { //draws a border
   //drawit
-  draw.strokeRect(x, y, width, height);
+  draw.rect(x, y, width, height);
 
 }
 
 //draws a rectange without offset
 function staticRect(x, y, width, height) {
   //draw it 
-  draw.fillRect(x, y, width, height);
+  draw.rect(x, y, width, height);
 }
 function setcolor(color) {
   draw.fillStyle = color;
@@ -129,10 +124,7 @@ function circle(x, y, width, height) {
   let gameXOffset = gameCamera.x - (screenW*worldZoom / 2);
   let gameYOffset = gameCamera.y - (screenH*worldZoom / 2);
   //draw it 
-  draw.beginPath();
   draw.ellipse(x - gameXOffset, y - gameYOffset, width / 2, height / 2, Math.PI, 0, 2 * Math.PI);
-  draw.fill();
-
 }
 //if number is > max it becomse max, if number < min it becomes min
 function clamp(number, min, max) {

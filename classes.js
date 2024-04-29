@@ -29,8 +29,10 @@ class player {
         this.healScore = 0;
     }
     draw() {
+        draw.beginPath();
         setcolor("tan");
         circle(this.x, this.y, 50, 50);
+        draw.fill();
     }
     move(speed, movementx, movementy) {
         // Apply movement with adjusted speed
@@ -84,9 +86,13 @@ class bar {
         this.height = height;
     }
     draw(fillLevel, color) {
+        draw.beginPath();
         setcolor(color);
-        stborderRect(this.x, this.y, this.width, this.height);
+        stborderRect(this.x, this.y, this.width, this.height)
+        draw.stroke();
+        draw.beginPath();
         staticRect(this.x + 2, this.y + 2, (this.width * (fillLevel / 100)) - 4, this.height - 4);
+        draw.fill();
     }
 }
 class chunk {
@@ -113,10 +119,7 @@ class chunk {
     }
     draw() {
         //draw chunk
-        setcolor("black");
         borderRect(this.startX, this.startY, gameSize.chunk, gameSize.chunk);
-        //go through each plant and for that plant run draw
-        this.plants.forEach((plant) => plant.draw());
     }
     //random function for the chunk that uses the chunks seed
     random(min, max) {
@@ -162,30 +165,33 @@ class tree {
         this.seed = (this.seed * 387420489 + 14348907) % 1e9;
         return Math.floor(getRandom(this.seed) * (max - min + 1) + min);
     }
-    draw() {
+    shadow() {
         //draw shadow
-        draw.strokeStyle = "rgba(12,46,32,0.5)"
-        setcolor("rgba(12,46,32,0.5)");
         for (let i = 0; i < this.branches.x.length; i++) {
             rRect(this.branches.x[i], this.branches.y[i] + 10, this.branches.size[i] + 4, this.branches.size[i] + 4, 10);
             line(this.branches.x[0], this.branches.y[0] + 10, this.branches.x[i], this.branches.y[i] + 10, 18);
         }
-        setcolor("#4d2d14");
+    }
+    dbranches() {
 
         //draw branches
         for (let i = 0; i < this.branches.x.length; i++) {
-            line(this.branches.x[0], this.branches.y[0], this.branches.x[i], this.branches.y[i], 18);
+            line(this.branches.x[0], this.branches.y[0], this.branches.x[i], this.branches.y[i]);
         }
-        setcolor("#08562e");
+    }
+    lOutline() {
         //draw leaves outline
         for (let i = 0; i < this.branches.x.length; i++) {
             rRect(this.branches.x[i], this.branches.y[i], this.branches.size[i] + 4, this.branches.size[i] + 4, 10);
         }
-        setcolor("#096e40");
+    }
+    leaves() {
         //draw leaves
         for (let i = 0; i < this.branches.x.length; i++) {
             rRect(this.branches.x[i], this.branches.y[i], this.branches.size[i], this.branches.size[i], 10);
         }
+    }
+    lInside() {
         setcolor("#1f7c43");
         //draw innerleaves
         for (let i = 0; i < this.branches.x.length; i++) {
@@ -202,7 +208,6 @@ class bush {
         this.y = y;
     }
     draw() {
-        setcolor("green");
         circle(this.x, this.y, 50, 50);
     }
 }
@@ -214,8 +219,10 @@ class backround {
         this.y = 0;
     }
     draw() {
+        draw.beginPath();
         setcolor(this.color);
         rect(this.x, this.y, gameSize.x * gameSize.chunk, gameSize.y * gameSize.chunk);
+        draw.fill();
     }
 }
 class camera {
