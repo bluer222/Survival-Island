@@ -130,14 +130,14 @@ document.addEventListener('keyup', (e) => {
     processMovement();
 });
 function updateClock() {
-    //one minute passes
+    //one minute passes every second
     clock.minute += 1/ticksPerSecond;
-    //if its an hour
+    //one our passes every minute(60 game minutes)
     if (clock.minute >= 60) {
         clock.minute = 1;
         clock.hour += 1;
     }
-    //if its a day
+    //day is 8 hours. after hour 5 it becomes night
     if (clock.hour == 8) {
         clock.hour = 1;
         clock.day += 1;
@@ -289,8 +289,8 @@ function tick() {
     fps = times.length;
     //set ticks per hour to frames per second times seocnds per game hour(60)
     ticksPerHour = 60 * fps;
-        //set ticks per second to frames per second
-        ticksPerSecond = 60 * fps;
+    //set ticks per second to frames per second
+    ond = fps;
     //if fps is lower multiply by a higher number
     movementComp = 60 / fps;
     updateClock();

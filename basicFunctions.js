@@ -57,22 +57,18 @@ function rect(x, y, width, height) {
   //create gameoffset, this compensates for the screensize, the gamesize, and the object size, so its centered
   let gameXOffset = gameCamera.x - (screenW*worldZoom / 2);
   let gameYOffset = gameCamera.y - (screenH*worldZoom / 2);
-  if (insideScreen(x-gameXOffset, y-gameYOffset, width, height)) {
   //draw it 
   draw.rect(x - gameXOffset, y - gameYOffset, width, height);
-  }
 }
 //draws a rounded rectangle
 function rRect(x, y, width, height, radius) {
   //create gameoffset, this compensates for the screensize, the gamesize, and the object size, so its centered
   let gameXOffset = gameCamera.x - (screenW*worldZoom / 2) + (width/2);
   let gameYOffset = gameCamera.y - (screenH*worldZoom / 2) + (height/2);
-  if (insideScreen(x-gameXOffset, y-gameYOffset, width, height)) {
   //draw it 
   //draw.beginPath();
   draw.roundRect(x - gameXOffset, y - gameYOffset, width, height, radius);
  // draw.fill();
-  }
 }
 //draws text
 function drawText(text, x, y, maxWidth) {
@@ -85,20 +81,15 @@ function line(x, y, x2, y2) {
   //create gameoffset, this compensates for the screensize, the gamesize, and the object size, so its centered
   let gameXOffset = gameCamera.x - (screenW*worldZoom / 2);
   let gameYOffset = gameCamera.y - (screenH*worldZoom / 2);
-  if (insideScreen(x-gameXOffset, y-gameYOffset,   0, 0) || insideScreen(x2-gameXOffset, y2-gameYOffset,   0, 0)) {
   draw.moveTo(x - gameXOffset, y - gameYOffset);
   draw.lineTo(x2 - gameXOffset, y2 - gameYOffset);
-  }
 }
 //makes a border for a recangle without offset
 function borderRect(x, y, width, height) { //draws a border
   //create gameoffset, this compensates for the screensize(center of the screen is 0,0)
   let gameXOffset = gameCamera.x - (screenW*worldZoom / 2);
-  let gameYOffset = gameCamera.y - (screenH*worldZoom / 2);
-  if (insideScreen(x-gameXOffset, y-gameYOffset, width, height)) {
-  //draw it 
+  let gameYOffset = gameCamera.y - (screenH*worldZoom / 2);  //draw it 
   draw.rect(x - gameXOffset, y - gameYOffset, width, height);
-  }
 
 }
 //makes a border for a recangle without offset
