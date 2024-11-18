@@ -1,6 +1,6 @@
 //tps counter
 var times = [];
-var tps;
+var tps = 60;
 //onscreen chunks
 var onscreenChunks = [];
 //number of ticks per hour, used to run hourly things every tick instead(like hunger)
@@ -306,7 +306,9 @@ function tick() {
     updateClock();
         mainCharacter.move(movement.speed, movement.cx, movement.cy)
     gameCamera.move(cameraSpeed, mainCharacter.x, mainCharacter.y);
+    //hunger and stuff
     mainCharacter.tickSurvival();
+    //green background
     grass.draw();
     //finds onscreen chunks, if not generated generate them
     findChunks();
@@ -315,7 +317,11 @@ function tick() {
     onscreenChunks.forEach((chunk) => {
         //combine all of the stuff to render onto one list
         thingsToRender = thingsToRender.concat(chunk.plants);
+        //chunks will also have animals and stuff to add
+
         //run activity for the chunk
+        //we would move all the animals here
+        //chunk.animals.forEach((animal)=>{animal.move();});
     });
     //render
     renderStuff(thingsToRender);
@@ -324,7 +330,7 @@ function tick() {
     bars.health.draw(mainCharacter.health, bars.hthColor);
     bars.hunger.draw(mainCharacter.hunger, bars.hngColor);
     bars.temp.draw(mainCharacter.temp, tempToColor(mainCharacter.temp));
-    drawText(tps, screenW - 30, 20, 30);
+    drawText(ticksPerSecond, screenW - 30, 20, 30);
     //Object.keys(everything);
     window.requestAnimationFrame(tick);
 }
