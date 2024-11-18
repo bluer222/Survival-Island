@@ -25,7 +25,6 @@ class player {
             //how quickly your health goes up or down
             healRate: healing.healRate
         };
-        //ticks per game hour(60 ticks a second, 60 seconds per game hour)
         this.healScore = 0;
     }
     draw() {
@@ -36,7 +35,7 @@ class player {
     }
     move(speed, movementx, movementy) {
         // Apply movement with adjusted speed
-        //multiplyt by 60/fps so that if fps is lower than 60 it will go faster
+        //multiply by 60/tps so that if tps is lower than 60 it will go faster
         this.x += movementx * speed * movementComp;
         this.y += movementy * speed * movementComp;
     }
@@ -220,7 +219,7 @@ class backround {
     }
     draw() {
         draw.beginPath();
-        setcolor(this.color);
+       setcolor(this.color);
         rect(this.x, this.y, gameSize.x * gameSize.chunk, gameSize.y * gameSize.chunk);
         draw.fill();
     }
@@ -234,9 +233,9 @@ class camera {
         this.yMomentum = 0;
     }
     move(cameraSpeed, goalx, goaly) {
-        this.xMomentum = ((goalx - this.x) / cameraSpeed) * movementComp;
-        this.yMomentum = ((goaly - this.y) / cameraSpeed) * movementComp;
-        this.x += this.xMomentum;
-        this.y += this.yMomentum;
+        this.xMomentum = ((goalx - this.x) / cameraSpeed);
+        this.yMomentum = ((goaly - this.y) / cameraSpeed);
+        this.x += this.xMomentum*movementComp;
+        this.y += this.yMomentum*movementComp;
     }
 }

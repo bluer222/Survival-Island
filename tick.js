@@ -1,13 +1,13 @@
-//fps counter
+//tps counter
 var times = [];
-var fps;
+var tps;
 //onscreen chunks
 var onscreenChunks = [];
 //number of ticks per hour, used to run hourly things every tick instead(like hunger)
 var ticksPerHour;
 //number of ticks per second, used for secondly things(clock)
 var ticksPerSecond; 
-//multiply things that run 60 times a second by this to compensate for lower fps
+//multiply things that run 60 times a second by this to compensate for lower tps
 var movementComp;
 //list that will store all the plants in the world
 var plants = [];
@@ -68,7 +68,7 @@ var mainCharacter = new player({
     sprintRate: 10,
     //healing will be fastest with hunger and temp at these values
     bestHunger: 100,
-    bestTemp: 50,
+    bestTemp: 60,
     //increasing this reduces the area where your close enough to optimal for you to heal
     //it also makes you lose health faster    
     healDifficulty: 7,
@@ -178,6 +178,9 @@ function processMovement() {
     }
 }
 function tempToColor(temperature) {
+    // blue = lch(60.6% 48.1 212.85)
+    //red = lch(60.6% 71.69 44.48);
+    //slowel adjust the numbers twards eachother
     // Calculate the color based on the temperature
     let r, g, b;
 
@@ -205,6 +208,10 @@ from the camera, and how far it has to be for it to be offscreen,
 using this it knows if it is onscreen*/
 function findChunks(){
     let start = performance.now();
+    //because trees stick over the edge of chunks(and will be seen disappearling)
+    //we pretend the screen is bigger than it is
+    //this is how many pixles biggler
+    let offset = 100;
     //loaded chunks
     onscreenChunks = [];
     //chunks is an array with arrays within it
@@ -213,13 +220,14 @@ function findChunks(){
     chunks.forEach((row, y) => {
         //cycle through the chunks in a row
         row.forEach((currentChunk, x) => {
-            //move the stuff in the chunk etc
-            //runChunkActions();
-            //is it close enough?
-             //create gameoffset, this compensates for the screensize, and the camera pos
-            let gameXOffset = gameCamera.x - (screenW / 2);
-            let gameYOffset = gameCamera.y - (screenH / 2);
-            if(insideScreen(x*gameSize.chunk-gameXOffset, y*gameSize.chunk-gameYOffset, gameSize.chunk, gameSize.chunk)/*Math.abs(xpos-gameCamera.x) < xdistance && Math.abs(ypos-gameCamera.y) < ydistance*/){
+            //create gameoffset, this compensates for the screensize, and the camera pos
+            let gameXOffset = gameCamera.x - ((screenW) / 2) + (offset/2);
+            let gameYOffset = gameCamera.y - ((screenH) / 2) + (offset/2);
+            //if onscreen where would the chunk be
+            let chunkXOnScreen = x*gameSize.chunk-gameXOffset;
+            let chunkYOnScreen = y*gameSize.chunk-gameYOffset;
+
+            if(insideScreen(chunkXOnScreen, chunkYOnScreen, gameSize.chunk+offset, gameSize.chunk+offset)){
                 //if its undefined then generate it
                 if(chunks[x][y] == ""){
                     console.log("creating chunk x:" +x+", y:" +y);
@@ -278,21 +286,23 @@ function renderStuff(thingsToRender){
     console.log("render took " + (performance.now()-start) + " ms");
 
 }
-
+function calcTps(){
+     //tps
+     const now = performance.now();
+     while (times.length > 0 && times[0] <= now - 1000) {
+         times.shift();
+     }
+     times.push(now);
+     tps = times.length;
+}
 function tick() {
-    //fps
-    const now = performance.now();
-    while (times.length > 0 && times[0] <= now - 1000) {
-        times.shift();
-    }
-    times.push(now);
-    fps = times.length;
-    //set ticks per hour to frames per second times seocnds per game hour(60)
-    ticksPerHour = 60 * fps;
+    calcTps();
+    //set ticks per hour to frames per second times seconds per game hour(60)
+    ticksPerHour = 60 * tps;
     //set ticks per second to frames per second
-    ond = fps;
-    //if fps is lower multiply by a higher number
-    movementComp = 60 / fps;
+    ticksPerSecond = tps;
+    //if tps is lower multiply by a higher number
+    movementComp = 60 / tps;
     updateClock();
         mainCharacter.move(movement.speed, movement.cx, movement.cy)
     gameCamera.move(cameraSpeed, mainCharacter.x, mainCharacter.y);
@@ -300,10 +310,12 @@ function tick() {
     grass.draw();
     //finds onscreen chunks, if not generated generate them
     findChunks();
-    //combine all of the stuff to render onto one list
+
     let thingsToRender = [];
     onscreenChunks.forEach((chunk) => {
+        //combine all of the stuff to render onto one list
         thingsToRender = thingsToRender.concat(chunk.plants);
+        //run activity for the chunk
     });
     //render
     renderStuff(thingsToRender);
@@ -312,7 +324,7 @@ function tick() {
     bars.health.draw(mainCharacter.health, bars.hthColor);
     bars.hunger.draw(mainCharacter.hunger, bars.hngColor);
     bars.temp.draw(mainCharacter.temp, tempToColor(mainCharacter.temp));
-    drawText(fps, screenW - 30, 20, 30);
+    drawText(tps, screenW - 30, 20, 30);
     //Object.keys(everything);
     window.requestAnimationFrame(tick);
 }

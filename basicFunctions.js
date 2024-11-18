@@ -27,7 +27,7 @@ canvas.style.height = window.innerHeight;
 });
 function insideScreen(x, y, width, height) {
   //checks if a thing is on the screen(we dont need to render it if not)
-  //this gains about 1 fps
+  //this gains about 1 tps
   return (x > (-width) && x < (screenW) && y > (- height) && y < (screenH))
 }
 function distanceToPoint(x1, y1, x2, y2) {
