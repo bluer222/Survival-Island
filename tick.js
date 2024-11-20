@@ -75,6 +75,7 @@ var mainCharacter = new player({
     //how quickly your health goes up or down
     healRate: 20
 });
+var hotbar = new inventory();
 //create array for chunks
 var chunks = createArray(gameSize.x, gameSize.y);
 //world creation
@@ -230,7 +231,7 @@ function findChunks(){
             if(insideScreen(chunkXOnScreen, chunkYOnScreen, gameSize.chunk+offset, gameSize.chunk+offset)){
                 //if its undefined then generate it
                 if(chunks[x][y] == ""){
-                    console.log("creating chunk x:" +x+", y:" +y);
+                    //console.log("creating chunk x:" +x+", y:" +y);
                     chunks[x][y] = new chunk({
                         startX: x*gameSize.chunk,
                         startY: y*gameSize.chunk,
@@ -245,8 +246,8 @@ function findChunks(){
             }
         });
     });
-    console.log("chunks took " + (performance.now()-start) + " ms");
-    console.log(onscreenChunks.length + " loaded chunks");
+    //console.log("chunks took " + (performance.now()-start) + " ms");
+    //console.log(onscreenChunks.length + " loaded chunks");
 }
 function renderStuff(thingsToRender){
     let start = performance.now();
@@ -283,7 +284,7 @@ function renderStuff(thingsToRender){
         chunk.draw();
     });
     draw.stroke();
-    console.log("render took " + (performance.now()-start) + " ms");
+    //console.log("render took " + (performance.now()-start) + " ms");
 
 }
 function calcTps(){
@@ -327,6 +328,7 @@ function tick() {
     renderStuff(thingsToRender);
     //the other stuff
     mainCharacter.draw();
+    hotbar.render();
     bars.health.draw(mainCharacter.health, bars.hthColor);
     bars.hunger.draw(mainCharacter.hunger, bars.hngColor);
     bars.temp.draw(mainCharacter.temp, tempToColor(mainCharacter.temp));
