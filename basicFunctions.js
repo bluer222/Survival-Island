@@ -114,6 +114,7 @@ function circle(x, y, width, height) {
   //create gameoffset, this compensates for the screensize, the gamesize, and the object size, so its centered
   let gameXOffset = gameCamera.x - (screenW*worldZoom / 2);
   let gameYOffset = gameCamera.y - (screenH*worldZoom / 2);
+  draw.moveTo(x - gameXOffset, y - gameYOffset);
   //draw it 
   draw.ellipse(x - gameXOffset, y - gameYOffset, width / 2, height / 2, Math.PI, 0, 2 * Math.PI);
 }

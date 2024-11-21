@@ -18,6 +18,15 @@ var gameSize = {
     //size of a chunk in px
     chunk: 1000,
 };
+//game configuration
+var conf = {
+    treesPerChunk: 10,
+    //1 means every chunk has a wolf, 10 means 1 in 10 chunks have wolf
+    chanceOfWolf: 1,
+    //how fast wolves move
+    wolfSpeed: 5,
+    wolfTurnSpeed: 1
+}
 //global movement attributes
 var movement = {
     //these are direct key inputs x = 1 if w pressed, -1 if s pressed
@@ -238,7 +247,8 @@ function findChunks(){
                         endY: (y+1)*gameSize.chunk,
                         color: "#C0F7B3",
                         seed: gameSeed*x*y,
-                        treeNumber: 10
+                        treeNumber: conf.treesPerChunk,
+                        chanceOfWolf: conf.chanceOfWolf
                     });
                 }
                 onscreenChunks.push(chunks[x][y]);
@@ -248,32 +258,42 @@ function findChunks(){
     console.log("chunks took " + (performance.now()-start) + " ms");
     console.log(onscreenChunks.length + " loaded chunks");
 }
-function renderStuff(thingsToRender){
+function renderStuff(plantsToRender, animalsToRender){
     let start = performance.now();
     draw.beginPath();
     setcolor("rgba(12,46,32,0.5)");
-    thingsToRender.forEach((plant) => plant.shadow());
+    plantsToRender.forEach((plant) => plant.shadow());
     draw.fill();
 
     draw.beginPath();
     setcolor("#4d2d14");
     draw.lineWidth = 18;
-    thingsToRender.forEach((plant) => plant.dbranches());
+    plantsToRender.forEach((plant) => plant.brown());
     draw.stroke();
 
     draw.beginPath();
     setcolor("#08562e");
-    thingsToRender.forEach((plant) => plant.lOutline());
+    plantsToRender.forEach((plant) => plant.darkGreen());
     draw.fill();
 
     draw.beginPath();
     setcolor("#096e40");
-    thingsToRender.forEach((plant) => plant.leaves());
+    plantsToRender.forEach((plant) => plant.green());
     draw.fill();
 
     draw.beginPath();
-    setcolor("#096e40");
-    thingsToRender.forEach((plant) => plant.lInside());
+    setcolor("#1f7c43");
+    plantsToRender.forEach((plant) => plant.lightGreen());
+    draw.fill();
+
+    draw.beginPath();
+    setcolor("#1f7c43");
+    plantsToRender.forEach((plant) => plant.lightGreen());
+    draw.fill();
+
+    draw.beginPath();
+    setcolor("#808080");
+    animalsToRender.forEach((animal) => animal.grey());
     draw.fill();
 
     draw.lineWidth = 2;
@@ -313,18 +333,20 @@ function tick() {
     //finds onscreen chunks, if not generated generate them
     findChunks();
 
-    let thingsToRender = [];
+    let plantsToRender = [];
+    let animalsToRender = [];
     onscreenChunks.forEach((chunk) => {
         //combine all of the stuff to render onto one list
-        thingsToRender = thingsToRender.concat(chunk.plants);
+        plantsToRender = plantsToRender.concat(chunk.plants);
         //chunks will also have animals and stuff to add
+        animalsToRender = animalsToRender.concat(chunk.animals);
 
         //run activity for the chunk
         //we would move all the animals here
-        //chunk.animals.forEach((animal)=>{animal.move();});
+        chunk.animals.forEach((animal)=>{animal.move();});
     });
     //render
-    renderStuff(thingsToRender);
+    renderStuff(plantsToRender, animalsToRender);
     //the other stuff
     mainCharacter.draw();
     bars.health.draw(mainCharacter.health, bars.hthColor);
@@ -332,6 +354,7 @@ function tick() {
     bars.temp.draw(mainCharacter.temp, tempToColor(mainCharacter.temp));
     drawText(ticksPerSecond, screenW - 30, 20, 30);
     //Object.keys(everything);
+    
     window.requestAnimationFrame(tick);
 }
 start();

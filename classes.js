@@ -110,9 +110,15 @@ class chunk {
         this.color = property.color;
         this.seed = property.seed;
         this.plants = [];
+        this.animals = [];
         for (let i = 0; i < property.treeNumber; i++) {
             this.plants.push(
                 new tree(this.rndLocInChunk("x"), this.rndLocInChunk("y"), i * this.seed)
+            );
+        }
+        if (this.random(1, property.chanceOfWolf) == 1) {
+            this.animals.push(
+                //new wolf(this.rndLocInChunk("x"), this.rndLocInChunk("y"), this.seed)
             );
         }
     }
@@ -171,33 +177,103 @@ class tree {
             line(this.branches.x[0], this.branches.y[0] + 10, this.branches.x[i], this.branches.y[i] + 10, 18);
         }
     }
-    dbranches() {
-
+    //draw all brown parts of tree
+    brown() {
         //draw branches
         for (let i = 0; i < this.branches.x.length; i++) {
             line(this.branches.x[0], this.branches.y[0], this.branches.x[i], this.branches.y[i]);
         }
     }
-    lOutline() {
+    //draw all {color here} parts of tree
+    darkGreen() {
         //draw leaves outline
         for (let i = 0; i < this.branches.x.length; i++) {
             rRect(this.branches.x[i], this.branches.y[i], this.branches.size[i] + 4, this.branches.size[i] + 4, 10);
         }
     }
-    leaves() {
+    //draw all {color here} parts of tree
+    green() {
         //draw leaves
         for (let i = 0; i < this.branches.x.length; i++) {
             rRect(this.branches.x[i], this.branches.y[i], this.branches.size[i], this.branches.size[i], 10);
         }
     }
-    lInside() {
-        setcolor("#1f7c43");
+    //draw all {color here} parts of tree
+    lightGreen() {
         //draw innerleaves
         for (let i = 0; i < this.branches.x.length; i++) {
             rRect(this.branches.x[i] + this.branches.innerXOffset[i], this.branches.y[i] + this.branches.innerYOffset[i], this.branches.size[i] - 20, this.branches.size[i] - 20, 10);
         }
     }
     grow(clock) {
+
+    }
+}
+class wolf {
+    constructor(x, y, seed) {
+        this.seed = seed;
+        this.x = x;
+        this.y = y;
+        this.health = 100;
+        this.movementGoalX = this.x + this.random(-1000, 1000);
+        this.movementGoalY = this.y + this.random(-1000, 1000);
+        this.speed = conf.wolfSpeed;
+        this.turnSpeed = conf.wolfTurnSpeed;
+
+        this.direction = this.random(0, 89);
+    }
+    //random function for the wolf that uses the wolfs seed
+    random(min, max) {
+        this.seed = (this.seed * 387420489 + 14348907) % 1e9;
+        return Math.floor(getRandom(this.seed) * (max - min + 1) + min);
+    }
+    //draw all {color here} parts of wolf
+    grey() {
+        circle(this.x, this.y, 100, 100)
+    }
+    move() {
+        /*
+        if(nearbyplayer){
+            set movementGoal to player pos
+        }
+        */
+        let distanceToX = Math.abs(this.movementGoalX - this.x);
+        let distanceToY = Math.abs(this.movementGoalY - this.y);
+        //if distance can be moved in one movement
+        if (Math.sqrt(distanceToX * distanceToX + distanceToY * distanceToY) < this.speed * movementComp) {
+            this.x = this.movementGoalX;
+            this.y = this.movementGoalY
+            this.movementGoalX = this.x + random(-100, 100);
+            this.movementGoalY = this.y + random(-100, 100);
+            return
+        }
+        //create two proportion values, together these = 1
+        //this decides the direction it wants to face, inverse tangent accepts opposite/adgecent and give the angle
+        //if within one turn of correct angle then set correct angle
+        let directionToFace = Math.atan(distanceToX / distanceToY);
+        if (Math.abs(directionToFace - this.direction) < this.turnSpeed * movementComp) {
+            this.direction = directionToFace;
+        }else{
+            //otherwise turn twards correct direction
+            if(directionToFace > this.direction){
+                this.direction += this.turnSpeed * movementComp;
+            }else{
+                this.direction -= this.turnSpeed * movementComp;
+
+            }
+
+        }
+        if (this.movementGoalX > this.x) {
+            //we're moving Right
+            this.x += Math.sin(directionToFace) * this.speed * movementComp;
+        } else {
+            this.x -= Math.sin(directionToFace) * this.speed * movementComp;
+        }
+        if (this.movementGoalY > this.y) {
+            this.y += Math.cos(directionToFace) * this.speed * movementComp;
+        } else {
+            this.y -= Math.cos(directionToFace) * this.speed * movementComp;
+        }
 
     }
 }
@@ -219,7 +295,7 @@ class backround {
     }
     draw() {
         draw.beginPath();
-       setcolor(this.color);
+        setcolor(this.color);
         rect(this.x, this.y, gameSize.x * gameSize.chunk, gameSize.y * gameSize.chunk);
         draw.fill();
     }
@@ -233,9 +309,9 @@ class camera {
         this.yMomentum = 0;
     }
     move(cameraSpeed, goalx, goaly) {
-        this.xMomentum = ((goalx - this.x) / cameraSpeed);
-        this.yMomentum = ((goaly - this.y) / cameraSpeed);
-        this.x += this.xMomentum*movementComp;
-        this.y += this.yMomentum*movementComp;
+        this.xMomentum = ((goalx - this.x) / (cameraSpeed*movementComp));
+        this.yMomentum = ((goaly - this.y) / (cameraSpeed*movementComp));
+        this.x += this.xMomentum;
+        this.y += this.yMomentum;
     }
 }
