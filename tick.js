@@ -42,8 +42,6 @@ var movement = {
     defaultSpeed: 5,
     sprintSpeed: 7
 };
-var inventorySlot = 0;
-var useHeld = false;
 //how quickly does the camera go to the player pos in frames(less frames is faster)
 var cameraSpeed = 15;
 //world seed for creating identical worlds
@@ -108,19 +106,18 @@ document.addEventListener('keydown', (e) => {
     if (e.key == "a" || e.key == "A" || e.key == "ArrowLeft") {
         movement.x -= 1;
     }
-    if (e.key == "1") {inventorySlot=0;}
-    if (e.key == "2") {inventorySlot=1;}
-    if (e.key == "3") {inventorySlot=2;}
-    if (e.key == "4") {inventorySlot=3;}
-    if (e.key == "5") {inventorySlot=4;}
-    if (e.key == "6") {inventorySlot=5;}
-    if (e.key == "7") {inventorySlot=6;}
-    if (e.key == "8") {inventorySlot=7;}
-    if (e.key == "9") {inventorySlot=8;}
-    if (e.key == "0") {inventorySlot=9;}
-    if (e.key == "e" && !useHeld){
+    if (e.key == "1") {hotbar.selectedSlot=0;}
+    if (e.key == "2") {hotbar.selectedSlot=1;}
+    if (e.key == "3") {hotbar.selectedSlot=2;}
+    if (e.key == "4") {hotbar.selectedSlot=3;}
+    if (e.key == "5") {hotbar.selectedSlot=4;}
+    if (e.key == "6") {hotbar.selectedSlot=5;}
+    if (e.key == "7") {hotbar.selectedSlot=6;}
+    if (e.key == "8") {hotbar.selectedSlot=7;}
+    if (e.key == "9") {hotbar.selectedSlot=8;}
+    if (e.key == "0") {hotbar.selectedSlot=9;}
+    if (e.key == "e"){
         hotbar.use()
-        useHeld = true;
     }
 
     //if you press shift and werent already running

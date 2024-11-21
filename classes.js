@@ -309,8 +309,8 @@ class camera {
         this.yMomentum = 0;
     }
     move(cameraSpeed, goalx, goaly) {
-        this.xMomentum = ((goalx - this.x) / (cameraSpeed*movementComp));
-        this.yMomentum = ((goaly - this.y) / (cameraSpeed*movementComp));
+        this.xMomentum = ((goalx - this.x) / (cameraSpeed/wmovementComp));
+        this.yMomentum = ((goaly - this.y) / (cameraSpeed/movementComp));
         this.x += this.xMomentum;
         this.y += this.yMomentum;
     }
@@ -331,8 +331,12 @@ class inventory {
         //badly named. the x coord of the current box
         this.firstboxx = 0
         //how wide and tall the boxes are
-        this.boxheight = 75
-        this.stacksize = 5
+        this.boxheight = 75;
+        //how wide and tall the selected box is
+        this.sboxheight = 85;
+        this.stacksize = 5;
+        //selected slot
+        this.selectedSlot = 0;
     }
     addItem(item){
         //loop through our array
@@ -353,13 +357,13 @@ class inventory {
             }
         }
         //once we find that we can't put item in any existing parts we loop again
-        if(this.array[inventorySlot].quantity == 0){
+        if(this.array[this.selectedSlot].quantity == 0){
                 //make the stack be the item
-                this.array[inventorySlot].name = item;
+                this.array[this.selectedSlot].name = item;
                 //add the item (it could just be = 1 but idc)
-                this.array[inventorySlot].quantity += 1;
+                this.array[this.selectedSlot].quantity += 1;
                 //log that we added it and return because we did
-                console.log(`Added ${this.array[inventorySlot].name} in new slot`)
+                console.log(`Added ${this.array[this.selectedSlot].name} in new slot`)
                 return;
             }
         for (let i = 0; i< 10; i++) {
@@ -387,16 +391,22 @@ class inventory {
         //x is on the left, y is up from the bottom by the height of the box, width is 10 boxes, height is 1 box
         staticRect(this.firstboxx, screenH - this.boxheight, this.boxheight*10, this.boxheight);
         draw.fill();
+
+        setcolor("white");
+        draw.beginPath();
         //loop for the 10 white interior boxes
         for (let i = 0; i < 10; i++){
             //draw the box
-            setcolor("white");
-            draw.beginPath();
             //x is down a tenth of the box (i should use a var instead of 10)
             staticRect(this.firstboxx + this.boxheight/10, screenH - this.boxheight + this.boxheight/10, this.boxheight-this.boxheight/5, this.boxheight-this.boxheight/5);
-            draw.fill();
             this.firstboxx += this.boxheight;
         }
+        //draw a bigger box for the one thats selected
+        staticRect(this.boxheight*this.selectedSlot + this.boxheight/10-(this.sboxheight-this.boxheight)/2, screenH - this.boxheight + this.boxheight/10-(this.sboxheight-this.boxheight)/2, this.sboxheight-this.sboxheight/5, this.sboxheight-this.sboxheight/5);
+
+        draw.fill();
+        
+
         //reset the x box (i think of it as a cursor)
         this.firstboxx = 0;
         //loop through boxes
@@ -426,7 +436,7 @@ class inventory {
         this.firstboxx = 0; 
         for (let i = 0; i < 10; i++){
             //if slot draw dot
-            if (i==inventorySlot){
+            if (i==this.selectedSlot){
                 //draw
                 setcolor("yellow")
                 draw.beginPath();
@@ -440,13 +450,13 @@ class inventory {
         }
     }
     use(){
-        if(this.array[inventorySlot].name == "berry"){
+        if(this.array[this.selectedSlot].name == "berry"){
             mainCharacter.hunger += 5;
-            this.array[inventorySlot].quantity -= 1
+            this.array[this.selectedSlot].quantity -= 1
         }
-        if(this.array[inventorySlot].quantity<=0){
-            this.array[inventorySlot].name = "";
-            this.array[inventorySlot].quantity = 0;
+        if(this.array[this.selectedSlot].quantity<=0){
+            this.array[this.selectedSlot].name = "";
+            this.array[this.selectedSlot].quantity = 0;
         }
     }
 }
