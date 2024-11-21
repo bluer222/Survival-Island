@@ -42,6 +42,8 @@ var movement = {
     defaultSpeed: 5,
     sprintSpeed: 7
 };
+var inventorySlot = 0;
+var useHeld = false;
 //how quickly does the camera go to the player pos in frames(less frames is faster)
 var cameraSpeed = 15;
 //world seed for creating identical worlds
@@ -84,6 +86,7 @@ var mainCharacter = new player({
     //how quickly your health goes up or down
     healRate: 20
 });
+var hotbar = new inventory();
 //create array for chunks
 var chunks = createArray(gameSize.x, gameSize.y);
 //world creation
@@ -105,6 +108,21 @@ document.addEventListener('keydown', (e) => {
     if (e.key == "a" || e.key == "A" || e.key == "ArrowLeft") {
         movement.x -= 1;
     }
+    if (e.key == "1") {inventorySlot=0;}
+    if (e.key == "2") {inventorySlot=1;}
+    if (e.key == "3") {inventorySlot=2;}
+    if (e.key == "4") {inventorySlot=3;}
+    if (e.key == "5") {inventorySlot=4;}
+    if (e.key == "6") {inventorySlot=5;}
+    if (e.key == "7") {inventorySlot=6;}
+    if (e.key == "8") {inventorySlot=7;}
+    if (e.key == "9") {inventorySlot=8;}
+    if (e.key == "0") {inventorySlot=9;}
+    if (e.key == "e" && !useHeld){
+        hotbar.use()
+        useHeld = true;
+    }
+
     //if you press shift and werent already running
     if (e.key == "Shift" && movement.speed != movement.sprintSpeed) {
         //set speed to sprintspeed and increase hunger rate based on config
@@ -128,6 +146,9 @@ document.addEventListener('keyup', (e) => {
     }
     if (e.key == "a" || e.key == "A" || e.key == "ArrowLeft") {
         movement.x += 1;
+    }
+    if (e.key == "e"){
+        useHeld = false;
     }
     //if you release shift and you were sprinting before
     if (e.key == "Shift" && movement.speed == movement.sprintSpeed) {
@@ -239,7 +260,7 @@ function findChunks(){
             if(insideScreen(chunkXOnScreen, chunkYOnScreen, gameSize.chunk+offset, gameSize.chunk+offset)){
                 //if its undefined then generate it
                 if(chunks[x][y] == ""){
-                    console.log("creating chunk x:" +x+", y:" +y);
+                    //console.log("creating chunk x:" +x+", y:" +y);
                     chunks[x][y] = new chunk({
                         startX: x*gameSize.chunk,
                         startY: y*gameSize.chunk,
@@ -255,8 +276,8 @@ function findChunks(){
             }
         });
     });
-    console.log("chunks took " + (performance.now()-start) + " ms");
-    console.log(onscreenChunks.length + " loaded chunks");
+    //console.log("chunks took " + (performance.now()-start) + " ms");
+    //console.log(onscreenChunks.length + " loaded chunks");
 }
 function renderStuff(plantsToRender, animalsToRender){
     let start = performance.now();
@@ -303,7 +324,7 @@ function renderStuff(plantsToRender, animalsToRender){
         chunk.draw();
     });
     draw.stroke();
-    console.log("render took " + (performance.now()-start) + " ms");
+    //console.log("render took " + (performance.now()-start) + " ms");
 
 }
 function calcTps(){
@@ -349,6 +370,7 @@ function tick() {
     renderStuff(plantsToRender, animalsToRender);
     //the other stuff
     mainCharacter.draw();
+    hotbar.render();
     bars.health.draw(mainCharacter.health, bars.hthColor);
     bars.hunger.draw(mainCharacter.hunger, bars.hngColor);
     bars.temp.draw(mainCharacter.temp, tempToColor(mainCharacter.temp));

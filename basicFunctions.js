@@ -118,6 +118,10 @@ function circle(x, y, width, height) {
   //draw it 
   draw.ellipse(x - gameXOffset, y - gameYOffset, width / 2, height / 2, Math.PI, 0, 2 * Math.PI);
 }
+function staticCircle(x, y, width, height) {
+  //draw it 
+  draw.ellipse(x, y, width / 2, height / 2, Math.PI, 0, 2 * Math.PI);
+}
 //if number is > max it becomse max, if number < min it becomes min
 function clamp(number, min, max) {
   return Math.min(Math.max(number, min), max);

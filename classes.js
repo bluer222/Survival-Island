@@ -315,3 +315,138 @@ class camera {
         this.y += this.yMomentum;
     }
 }
+class inventory {
+    constructor(){
+        //array of items
+        this.array = [{name: "", quantity: 0},
+            {name: "", quantity: 0},
+            {name: "", quantity: 0},
+            {name: "", quantity: 0},
+            {name: "", quantity: 0},
+            {name: "", quantity: 0},
+            {name: "", quantity: 0},
+            {name: "", quantity: 0},
+            {name: "", quantity: 0},
+            {name: "", quantity: 0}]
+        //badly named. the x coord of the current box
+        this.firstboxx = 0
+        //how wide and tall the boxes are
+        this.boxheight = 75
+        this.stacksize = 5
+    }
+    addItem(item){
+        //loop through our array
+        for (let i = 0; i < 10; i++){
+            //if we already have a stack of the item and it has room 
+            if(item == this.array[i].name && this.array[i].quantity < this.stacksize){
+                // log shit for debugging
+                // console.log(this.array[i].name);
+                // console.log(item)
+                
+                //add an item to that stacks
+                this.array[i].quantity += 1;
+                //logs where it was added and the inventory array
+                console.log(`Added ${this.array[i].name} in prexisting slot`)
+                console.log(this.array)
+                //item is added. return.
+                return;
+            }
+        }
+        //once we find that we can't put item in any existing parts we loop again
+        if(this.array[inventorySlot].quantity == 0){
+                //make the stack be the item
+                this.array[inventorySlot].name = item;
+                //add the item (it could just be = 1 but idc)
+                this.array[inventorySlot].quantity += 1;
+                //log that we added it and return because we did
+                console.log(`Added ${this.array[inventorySlot].name} in new slot`)
+                return;
+            }
+        for (let i = 0; i< 10; i++) {
+            //if this slot is empty
+            if(this.array[i].quantity == 0){
+                //make the stack be the item
+                this.array[i].name = item;
+                //add the item (it could just be = 1 but idc)
+                this.array[i].quantity += 1;
+                //log that we added it and return because we did
+                console.log(`Added ${this.array[i].name} in new slot`)
+                return;
+            }
+        }
+        //if we couldn't fit an item, return
+        return
+    }
+    //draws the inventory
+    render(){
+        //set us to have our box start in the corner
+        this.firstboxx = 0;
+        //draw big background box
+        setcolor("black");
+        draw.beginPath();
+        //x is on the left, y is up from the bottom by the height of the box, width is 10 boxes, height is 1 box
+        staticRect(this.firstboxx, screenH - this.boxheight, this.boxheight*10, this.boxheight);
+        draw.fill();
+        //loop for the 10 white interior boxes
+        for (let i = 0; i < 10; i++){
+            //draw the box
+            setcolor("white");
+            draw.beginPath();
+            //x is down a tenth of the box (i should use a var instead of 10)
+            staticRect(this.firstboxx + this.boxheight/10, screenH - this.boxheight + this.boxheight/10, this.boxheight-this.boxheight/5, this.boxheight-this.boxheight/5);
+            draw.fill();
+            this.firstboxx += this.boxheight;
+        }
+        //reset the x box (i think of it as a cursor)
+        this.firstboxx = 0;
+        //loop through boxes
+        for (let i = 0; i < 10; i++){
+            //if berry draw berry
+            if (this.array[i].name == "berry" && this.array[i].quantity >0){
+                //draw
+                setcolor("red")
+                draw.beginPath();
+                staticCircle((this.firstboxx+(this.boxheight/2))-5, (screenH - this.boxheight+(this.boxheight/2))-5, this.boxheight/2.5, this.boxheight/2.5);
+                draw.fill();
+                //move to next position
+            }
+            this.firstboxx += this.boxheight;
+            //do more if statements for more items. to add: number amounts. can't be too hard
+        }
+        this.firstboxx = 0;
+        //loop through boxes
+        for (let i = 0; i < 10; i++){
+            //if item write amount
+            if (this.array[i].quantity > 0){
+                //draw
+                drawText(`${this.array[i].quantity}`, this.firstboxx+this.boxheight-25, screenH-this.boxheight+55, 20)                
+            }
+            this.firstboxx += this.boxheight;//do more if statements for more items. to add: number amounts. can't be too hard
+        }  
+        this.firstboxx = 0; 
+        for (let i = 0; i < 10; i++){
+            //if slot draw dot
+            if (i==inventorySlot){
+                //draw
+                setcolor("yellow")
+                draw.beginPath();
+                staticCircle((this.firstboxx+(this.boxheight/2)), (screenH - this.boxheight+(this.boxheight/2)), this.boxheight/5, this.boxheight/5);
+                draw.fill();
+                //move to next position
+                
+            }
+            this.firstboxx += this.boxheight;
+            //do more if statements for more items. to add: number amounts. can't be too hard
+        }
+    }
+    use(){
+        if(this.array[inventorySlot].name == "berry"){
+            mainCharacter.hunger += 5;
+            this.array[inventorySlot].quantity -= 1
+        }
+        if(this.array[inventorySlot].quantity<=0){
+            this.array[inventorySlot].name = "";
+            this.array[inventorySlot].quantity = 0;
+        }
+    }
+}
