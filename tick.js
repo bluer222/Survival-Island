@@ -136,7 +136,7 @@ document.addEventListener('keydown', (e) => {
     if (e.key == "q") {
         if (interactObject !== "") {
             interactObject.interact();
-            console.log("there were " + touchableThings.length+ " other things that could be interacted")
+            console.log("there were " + touchableThings.length + " other things that could be interacted")
         }
     }
 
@@ -254,7 +254,6 @@ function tempToColor(temperature) {
 from the camera, and how far it has to be for it to be offscreen,
 using this it knows if it is onscreen*/
 function findChunks() {
-    let start = performance.now();
     //because trees stick over the edge of chunks(and will be seen disappearling)
     //we pretend the screen is bigger than it is
     //this is how many pixles biggler
@@ -294,8 +293,6 @@ function findChunks() {
             }
         });
     });
-    //console.log("chunks took " + (performance.now()-start) + " ms");
-    //console.log(onscreenChunks.length + " loaded chunks");
 }
 function renderStuff(plantsToRender, animalsToRender) {
     let start = performance.now();
@@ -359,64 +356,68 @@ function calcTps() {
 }
 function tick() {
     calcTps();
-    //set ticks per hour to frames per second times seconds per game hour(60)
-    ticksPerHour = 60 * tps;
-    //set ticks per second to frames per second
-    ticksPerSecond = tps;
-    //if tps is lower multiply by a higher number
-    movementComp = 60 / tps;
-    updateClock();
-    mainCharacter.move(movement.speed, movement.cx, movement.cy)
-    gameCamera.move(cameraSpeed, mainCharacter.x, mainCharacter.y);
-    //hunger and stuff
-    mainCharacter.tickSurvival();
-    //green background
-    grass.draw();
-    //finds onscreen chunks, if not generated generate them
-    findChunks();
+    //if tps == 0 then the user is in another tab or somthing so dont run the game
+    if (tps == 0) {
+console.log("tab not open");
+    } else {
+        //set ticks per hour to frames per second times seconds per game hour(60)
+        ticksPerHour = 60 * tps;
+        //set ticks per second to frames per second
+        ticksPerSecond = tps;
+        //if tps is lower multiply by a higher number
+        movementComp = 60 / tps;
+        updateClock();
+        mainCharacter.move(movement.speed, movement.cx, movement.cy)
+        gameCamera.move(cameraSpeed, mainCharacter.x, mainCharacter.y);
+        //hunger and stuff
+        mainCharacter.tickSurvival();
+        //green background
+        grass.draw();
+        //finds onscreen chunks, if not generated generate them
+        findChunks();
 
-    let plantsToRender = [];
-    let animalsToRender = [];
-    onscreenChunks.forEach((chunk) => {
-        //combine all of the stuff to render onto one list
-        plantsToRender = plantsToRender.concat(chunk.plants);
-        //chunks will also have animals and stuff to add
-        animalsToRender = animalsToRender.concat(chunk.animals);
+        let plantsToRender = [];
+        let animalsToRender = [];
+        onscreenChunks.forEach((chunk) => {
+            //combine all of the stuff to render onto one list
+            plantsToRender = plantsToRender.concat(chunk.plants);
+            //chunks will also have animals and stuff to add
+            animalsToRender = animalsToRender.concat(chunk.animals);
 
-        //run activity for the chunk
-        //we would move all the animals here
-        chunk.animals.forEach((animal) => { animal.move(); });
-        chunk.plants.forEach((plant) => { plant.grow(); });
-    });
-    //we need to identify what things are in touching distance
-    touchableThings = [];
-    interactObject = "";
-    plantsToRender.forEach(plant => {
-        //find distance between us and plant
-        let xDiff = mainCharacter.x - plant.x;
-        let yDiff = mainCharacter.y - plant.y;
-        let distance = Math.sqrt(xDiff ^ 2 + yDiff ^ 2);
-        if (distance < reachDistance) {
-            //rn only bushes are interactable
-            if (plant instanceof bush) {
-                touchableThings.push(plant);
+            //run activity for the chunk
+            //we would move all the animals here
+            chunk.animals.forEach((animal) => { animal.move(); });
+            chunk.plants.forEach((plant) => { plant.grow(); });
+        });
+        //we need to identify what things are in touching distance
+        touchableThings = [];
+        interactObject = "";
+        plantsToRender.forEach(plant => {
+            //find distance between us and plant
+            let xDiff = mainCharacter.x - plant.x;
+            let yDiff = mainCharacter.y - plant.y;
+            let distance = Math.sqrt(xDiff ^ 2 + yDiff ^ 2);
+            if (distance < reachDistance) {
+                //rn only bushes are interactable
+                if (plant instanceof bush) {
+                    touchableThings.push(plant);
+                }
             }
+        });
+        if (touchableThings.length !== 0) {
+            interactObject = touchableThings[0];
         }
-    });
-    if (touchableThings.length !== 0) {
-        interactObject = touchableThings[0];
+        //render
+        renderStuff(plantsToRender, animalsToRender);
+        //the other stuff
+        mainCharacter.draw();
+        hotbar.render();
+        bars.health.draw(mainCharacter.health, bars.hthColor);
+        bars.hunger.draw(mainCharacter.hunger, bars.hngColor);
+        bars.temp.draw(mainCharacter.temp, tempToColor(mainCharacter.temp));
+        drawText(ticksPerSecond, screenW - 30, 20, 30);
+        //Object.keys(everything);
     }
-    //render
-    renderStuff(plantsToRender, animalsToRender);
-    //the other stuff
-    mainCharacter.draw();
-    hotbar.render();
-    bars.health.draw(mainCharacter.health, bars.hthColor);
-    bars.hunger.draw(mainCharacter.hunger, bars.hngColor);
-    bars.temp.draw(mainCharacter.temp, tempToColor(mainCharacter.temp));
-    drawText(ticksPerSecond, screenW - 30, 20, 30);
-    //Object.keys(everything);
-
     window.requestAnimationFrame(tick);
 }
 start();
