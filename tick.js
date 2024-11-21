@@ -1,5 +1,5 @@
 //tps counter
-var times = [];
+var times = 0;
 var tps = 60;
 //onscreen chunks
 var onscreenChunks = [];
@@ -326,12 +326,10 @@ function renderStuff(plantsToRender, animalsToRender){
 }
 function calcTps(){
      //tps
-     const now = performance.now();
-     while (times.length > 0 && times[0] <= now - 1000) {
-         times.shift();
-     }
-     times.push(now);
-     tps = times.length;
+     const now = performance.now();;
+     msSinceLastFrame = now-times;
+     tps = Math.round(1000/msSinceLastFrame);
+     times = now;
 }
 function tick() {
     calcTps();
