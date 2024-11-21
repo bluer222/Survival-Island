@@ -34,6 +34,7 @@ var movement = {
     sprintSpeed: 7
 };
 var inventorySlot = 0;
+var useHeld = false;
 //how quickly does the camera go to the player pos in frames(less frames is faster)
 var cameraSpeed = 15;
 //world seed for creating identical worlds
@@ -108,6 +109,10 @@ document.addEventListener('keydown', (e) => {
     if (e.key == "8") {inventorySlot=7;}
     if (e.key == "9") {inventorySlot=8;}
     if (e.key == "0") {inventorySlot=9;}
+    if (e.key == "e" && !useHeld){
+        hotbar.use()
+        useHeld = true;
+    }
 
     //if you press shift and werent already running
     if (e.key == "Shift" && movement.speed != movement.sprintSpeed) {
@@ -132,6 +137,9 @@ document.addEventListener('keyup', (e) => {
     }
     if (e.key == "a" || e.key == "A" || e.key == "ArrowLeft") {
         movement.x += 1;
+    }
+    if (e.key == "e"){
+        useHeld = false;
     }
     //if you release shift and you were sprinting before
     if (e.key == "Shift" && movement.speed == movement.sprintSpeed) {
