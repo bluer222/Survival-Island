@@ -33,6 +33,7 @@ var movement = {
     defaultSpeed: 5,
     sprintSpeed: 7
 };
+var inventorySlot = 0;
 //how quickly does the camera go to the player pos in frames(less frames is faster)
 var cameraSpeed = 15;
 //world seed for creating identical worlds
@@ -97,6 +98,17 @@ document.addEventListener('keydown', (e) => {
     if (e.key == "a" || e.key == "A" || e.key == "ArrowLeft") {
         movement.x -= 1;
     }
+    if (e.key == "1") {inventorySlot=0;}
+    if (e.key == "2") {inventorySlot=1;}
+    if (e.key == "3") {inventorySlot=2;}
+    if (e.key == "4") {inventorySlot=3;}
+    if (e.key == "5") {inventorySlot=4;}
+    if (e.key == "6") {inventorySlot=5;}
+    if (e.key == "7") {inventorySlot=6;}
+    if (e.key == "8") {inventorySlot=7;}
+    if (e.key == "9") {inventorySlot=8;}
+    if (e.key == "0") {inventorySlot=9;}
+
     //if you press shift and werent already running
     if (e.key == "Shift" && movement.speed != movement.sprintSpeed) {
         //set speed to sprintspeed and increase hunger rate based on config
