@@ -108,43 +108,47 @@ function start() {
 //detect keydown
 document.addEventListener('keydown', (e) => {
     //if it is a movement key then set the movement variale to reflect it
-    if (e.key == "w" || e.key == "W" || e.key == "ArrowUp") {
-        movement.y -= 1;
-    }
-    if (e.key == "d" || e.key == "D" || e.key == "ArrowRight") {
-        movement.x += 1;
-    }
-    if (e.key == "s" || e.key == "S" || e.key == "ArrowDown") {
-        movement.y += 1;
-    }
-    if (e.key == "a" || e.key == "A" || e.key == "ArrowLeft") {
-        movement.x -= 1;
-    }
-    if (e.key == "1") { hotbar.selectedSlot = 0; }
-    if (e.key == "2") { hotbar.selectedSlot = 1; }
-    if (e.key == "3") { hotbar.selectedSlot = 2; }
-    if (e.key == "4") { hotbar.selectedSlot = 3; }
-    if (e.key == "5") { hotbar.selectedSlot = 4; }
-    if (e.key == "6") { hotbar.selectedSlot = 5; }
-    if (e.key == "7") { hotbar.selectedSlot = 6; }
-    if (e.key == "8") { hotbar.selectedSlot = 7; }
-    if (e.key == "9") { hotbar.selectedSlot = 8; }
-    if (e.key == "0") { hotbar.selectedSlot = 9; }
-    if (e.key == "e") {
-        hotbar.use()
-    }
-    if (e.key == "q") {
-        if (interactObject !== "") {
-            interactObject.interact();
-            console.log("there were " + touchableThings.length + " other things that could be interacted")
+    //only count if this is a new press and not an old press repeating from being held
+    if (e.repeat === false) {
+        //if it is a movement key then set the movement variale to reflect it
+        if (e.key == "w" || e.key == "W" || e.key == "ArrowUp") {
+            movement.y -= 1;
         }
-    }
+        if (e.key == "d" || e.key == "D" || e.key == "ArrowRight") {
+            movement.x += 1;
+        }
+        if (e.key == "s" || e.key == "S" || e.key == "ArrowDown") {
+            movement.y += 1;
+        }
+        if (e.key == "a" || e.key == "A" || e.key == "ArrowLeft") {
+            movement.x -= 1;
+        }
+        if (e.key == "1") { hotbar.selectedSlot = 0; }
+        if (e.key == "2") { hotbar.selectedSlot = 1; }
+        if (e.key == "3") { hotbar.selectedSlot = 2; }
+        if (e.key == "4") { hotbar.selectedSlot = 3; }
+        if (e.key == "5") { hotbar.selectedSlot = 4; }
+        if (e.key == "6") { hotbar.selectedSlot = 5; }
+        if (e.key == "7") { hotbar.selectedSlot = 6; }
+        if (e.key == "8") { hotbar.selectedSlot = 7; }
+        if (e.key == "9") { hotbar.selectedSlot = 8; }
+        if (e.key == "0") { hotbar.selectedSlot = 9; }
+        if (e.key == "e") {
+            hotbar.use()
+        }
+        if (e.key == "q") {
+            if (interactObject !== "") {
+                interactObject.interact();
+                console.log("there were " + touchableThings.length + " other things that could be interacted")
+            }
+        }
 
-    //if you press shift and werent already running
-    if (e.key == "Shift" && movement.speed != movement.sprintSpeed) {
-        //set speed to sprintspeed and increase hunger rate based on config
-        movement.speed = movement.sprintSpeed;
-        mainCharacter.healing.hungerRate += mainCharacter.healing.sprintRate;
+        //if you press shift and werent already running
+        if (e.key == "Shift" && movement.speed != movement.sprintSpeed) {
+            //set speed to sprintspeed and increase hunger rate based on config
+            movement.speed = movement.sprintSpeed;
+            mainCharacter.healing.hungerRate += mainCharacter.healing.sprintRate;
+        }
     }
     //calculate the actual movement x and y if you compensate for diagnol
     processMovement();
@@ -358,7 +362,7 @@ function tick() {
     calcTps();
     //if tps == 0 then the user is in another tab or somthing so dont run the game
     if (tps == 0) {
-console.log("tab not open");
+        console.log("tab not open");
     } else {
         //set ticks per hour to frames per second times seconds per game hour(60)
         ticksPerHour = 60 * tps;
