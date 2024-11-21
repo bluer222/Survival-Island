@@ -309,7 +309,7 @@ class camera {
         this.yMomentum = 0;
     }
     move(cameraSpeed, goalx, goaly) {
-        this.xMomentum = ((goalx - this.x) / (cameraSpeed/wmovementComp));
+        this.xMomentum = ((goalx - this.x) / (cameraSpeed/movementComp));
         this.yMomentum = ((goaly - this.y) / (cameraSpeed/movementComp));
         this.x += this.xMomentum;
         this.y += this.yMomentum;
