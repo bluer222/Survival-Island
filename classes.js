@@ -73,6 +73,7 @@ class player {
         this.temp = clamp(this.temp, 0, 100);
         //die
         if (this.health == 0) {
+            die();
         }
     }
 }

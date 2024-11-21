@@ -424,4 +424,7 @@ function tick() {
     }
     window.requestAnimationFrame(tick);
 }
+function die(){
+    window.location.reload()
+}
 start();
