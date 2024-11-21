@@ -116,6 +116,11 @@ class chunk {
                 new tree(this.rndLocInChunk("x"), this.rndLocInChunk("y"), i * this.seed)
             );
         }
+        for (let i = 0; i < property.bushNumber; i++) {
+            this.plants.push(
+                new bush(this.rndLocInChunk("x"), this.rndLocInChunk("y"), i * this.seed)
+            );
+        }
         if (this.random(1, property.chanceOfWolf) == 1) {
             this.animals.push(
                 //new wolf(this.rndLocInChunk("x"), this.rndLocInChunk("y"), this.seed)
@@ -205,6 +210,9 @@ class tree {
             rRect(this.branches.x[i] + this.branches.innerXOffset[i], this.branches.y[i] + this.branches.innerYOffset[i], this.branches.size[i] - 20, this.branches.size[i] - 20, 10);
         }
     }
+    red() {
+
+    }
     grow(clock) {
 
     }
@@ -253,11 +261,11 @@ class wolf {
         let directionToFace = Math.atan(distanceToX / distanceToY);
         if (Math.abs(directionToFace - this.direction) < this.turnSpeed * movementComp) {
             this.direction = directionToFace;
-        }else{
+        } else {
             //otherwise turn twards correct direction
-            if(directionToFace > this.direction){
+            if (directionToFace > this.direction) {
                 this.direction += this.turnSpeed * movementComp;
-            }else{
+            } else {
                 this.direction -= this.turnSpeed * movementComp;
 
             }
@@ -278,12 +286,72 @@ class wolf {
     }
 }
 class bush {
-    constructor(x, y) {
+    constructor(x, y, seed) {
         this.x = x;
         this.y = y;
+        this.seed = seed;
+        this.berries = [];
+        this.nextGrowTime = random(conf.maxGrowSpeed, conf.minGrowSpeed)
+        //anywhere from 3 to 7 berry positions
+        for (let index = 0; index < random(conf.minBerries, conf.maxBerries); index++) {
+            this.berries.push({ x: random(-25, 25), y: random(-25, 25), hasBerry: this.random(0, 1) })
+        }
     }
-    draw() {
-        circle(this.x, this.y, 50, 50);
+    grow() {
+        //at 60 fps this would be -1 but we must compensate for fps
+        this.nextGrowTime -= movementComp;
+        if (this.nextGrowTime <= 0) {
+            this.nextGrowTime = random(conf.maxGrowSpeed, conf.minGrowSpeed)
+            for (let index = 0; index < this.berries.length; index++) {
+                const berry = this.berries[index];
+                if (berry.hasBerry == 0) {
+                    berry.hasBerry = 1;
+                    return
+                }
+            }
+        }
+    }
+    interact() {
+        //find a berry
+        for (let index = 0; index < this.berries.length; index++) {
+            const berry = this.berries[index];
+            if (berry.hasBerry == 1) {
+                //try to add berry
+                if (hotbar.addItem("berry")) {
+                    berry.hasBerry = 0;
+                }
+                return
+            }
+        }
+
+    }
+    green() {
+        circle(this.x, this.y, 75, 75);
+    }
+    red() {
+        this.berries.forEach(berry => {
+            if (berry.hasBerry) {
+                circle(berry.x + this.x, berry.y + this.y, 10, 10);
+            }
+        });
+    }
+    shadow() {
+        circle(this.x, this.y + 3, 75, 75);
+
+    }
+    //draw all {color here} parts of bush
+    brown() {
+
+    }
+    darkGreen() {
+
+    }
+    lightGreen() {
+
+    }
+    random(min, max) {
+        this.seed = (this.seed * 387420489 + 14348907) % 1e9;
+        return Math.floor(getRandom(this.seed) * (max - min + 1) + min);
     }
 }
 class backround {
@@ -309,25 +377,25 @@ class camera {
         this.yMomentum = 0;
     }
     move(cameraSpeed, goalx, goaly) {
-        this.xMomentum = ((goalx - this.x) / (cameraSpeed/movementComp));
-        this.yMomentum = ((goaly - this.y) / (cameraSpeed/movementComp));
+        this.xMomentum = ((goalx - this.x) / (cameraSpeed / movementComp));
+        this.yMomentum = ((goaly - this.y) / (cameraSpeed / movementComp));
         this.x += this.xMomentum;
         this.y += this.yMomentum;
     }
 }
 class inventory {
-    constructor(){
+    constructor() {
         //array of items
-        this.array = [{name: "", quantity: 0},
-            {name: "", quantity: 0},
-            {name: "", quantity: 0},
-            {name: "", quantity: 0},
-            {name: "", quantity: 0},
-            {name: "", quantity: 0},
-            {name: "", quantity: 0},
-            {name: "", quantity: 0},
-            {name: "", quantity: 0},
-            {name: "", quantity: 0}]
+        this.array = [{ name: "", quantity: 0 },
+        { name: "", quantity: 0 },
+        { name: "", quantity: 0 },
+        { name: "", quantity: 0 },
+        { name: "", quantity: 0 },
+        { name: "", quantity: 0 },
+        { name: "", quantity: 0 },
+        { name: "", quantity: 0 },
+        { name: "", quantity: 0 },
+        { name: "", quantity: 0 }]
         //badly named. the x coord of the current box
         this.firstboxx = 0
         //how wide and tall the boxes are
@@ -338,85 +406,85 @@ class inventory {
         //selected slot
         this.selectedSlot = 0;
     }
-    addItem(item){
+    addItem(item) {
         //loop through our array
-        for (let i = 0; i < 10; i++){
+        for (let i = 0; i < 10; i++) {
             //if we already have a stack of the item and it has room 
-            if(item == this.array[i].name && this.array[i].quantity < this.stacksize){
+            if (item == this.array[i].name && this.array[i].quantity < this.stacksize) {
                 // log shit for debugging
                 // console.log(this.array[i].name);
                 // console.log(item)
-                
+
                 //add an item to that stacks
                 this.array[i].quantity += 1;
                 //logs where it was added and the inventory array
                 console.log(`Added ${this.array[i].name} in prexisting slot`)
                 console.log(this.array)
                 //item is added. return.
-                return;
+                return true;
             }
         }
         //once we find that we can't put item in any existing parts we loop again
-        if(this.array[this.selectedSlot].quantity == 0){
-                //make the stack be the item
-                this.array[this.selectedSlot].name = item;
-                //add the item (it could just be = 1 but idc)
-                this.array[this.selectedSlot].quantity += 1;
-                //log that we added it and return because we did
-                console.log(`Added ${this.array[this.selectedSlot].name} in new slot`)
-                return;
-            }
-        for (let i = 0; i< 10; i++) {
+        if (this.array[this.selectedSlot].quantity == 0) {
+            //make the stack be the item
+            this.array[this.selectedSlot].name = item;
+            //add the item (it could just be = 1 but idc)
+            this.array[this.selectedSlot].quantity += 1;
+            //log that we added it and return because we did
+            console.log(`Added ${this.array[this.selectedSlot].name} in new slot`)
+            return true;
+        }
+        for (let i = 0; i < 10; i++) {
             //if this slot is empty
-            if(this.array[i].quantity == 0){
+            if (this.array[i].quantity == 0) {
                 //make the stack be the item
                 this.array[i].name = item;
                 //add the item (it could just be = 1 but idc)
                 this.array[i].quantity += 1;
                 //log that we added it and return because we did
                 console.log(`Added ${this.array[i].name} in new slot`)
-                return;
+                return true;
             }
         }
         //if we couldn't fit an item, return
-        return
+        return false
     }
     //draws the inventory
-    render(){
+    render() {
         //set us to have our box start in the corner
         this.firstboxx = 0;
         //draw big background box
         setcolor("black");
         draw.beginPath();
         //x is on the left, y is up from the bottom by the height of the box, width is 10 boxes, height is 1 box
-        staticRect(this.firstboxx, screenH - this.boxheight, this.boxheight*10, this.boxheight);
+        staticRect(this.firstboxx, screenH - this.boxheight, this.boxheight * 10, this.boxheight);
         draw.fill();
 
         setcolor("white");
         draw.beginPath();
         //loop for the 10 white interior boxes
-        for (let i = 0; i < 10; i++){
+        for (let i = 0; i < 10; i++) {
             //draw the box
             //x is down a tenth of the box (i should use a var instead of 10)
-            staticRect(this.firstboxx + this.boxheight/10, screenH - this.boxheight + this.boxheight/10, this.boxheight-this.boxheight/5, this.boxheight-this.boxheight/5);
+            staticRect(this.firstboxx + this.boxheight / 10, screenH - this.boxheight + this.boxheight / 10, this.boxheight - this.boxheight / 5, this.boxheight - this.boxheight / 5);
             this.firstboxx += this.boxheight;
         }
         //draw a bigger box for the one thats selected
-        staticRect(this.boxheight*this.selectedSlot + this.boxheight/10-(this.sboxheight-this.boxheight)/2, screenH - this.boxheight + this.boxheight/10-(this.sboxheight-this.boxheight)/2, this.sboxheight-this.sboxheight/5, this.sboxheight-this.sboxheight/5);
+        staticRect(this.boxheight * this.selectedSlot + this.boxheight / 10 - (this.sboxheight - this.boxheight) / 2, screenH - this.boxheight + this.boxheight / 10 - (this.sboxheight - this.boxheight) / 2, this.sboxheight - this.sboxheight / 5, this.sboxheight - this.sboxheight / 5);
 
         draw.fill();
-        
+
 
         //reset the x box (i think of it as a cursor)
         this.firstboxx = 0;
         //loop through boxes
-        for (let i = 0; i < 10; i++){
+        for (let i = 0; i < 10; i++) {
             //if berry draw berry
-            if (this.array[i].name == "berry" && this.array[i].quantity >0){
+            if (this.array[i].name == "berry" && this.array[i].quantity > 0) {
                 //draw
                 setcolor("red")
                 draw.beginPath();
-                staticCircle((this.firstboxx+(this.boxheight/2))-5, (screenH - this.boxheight+(this.boxheight/2))-5, this.boxheight/2.5, this.boxheight/2.5);
+                staticCircle((this.firstboxx + (this.boxheight / 2)) - 5, (screenH - this.boxheight + (this.boxheight / 2)) - 5, this.boxheight / 2.5, this.boxheight / 2.5);
                 draw.fill();
                 //move to next position
             }
@@ -425,36 +493,36 @@ class inventory {
         }
         this.firstboxx = 0;
         //loop through boxes
-        for (let i = 0; i < 10; i++){
+        for (let i = 0; i < 10; i++) {
             //if item write amount
-            if (this.array[i].quantity > 0){
+            if (this.array[i].quantity > 0) {
                 //draw
-                drawText(`${this.array[i].quantity}`, this.firstboxx+this.boxheight-25, screenH-this.boxheight+55, 20)                
+                drawText(`${this.array[i].quantity}`, this.firstboxx + this.boxheight - 25, screenH - this.boxheight + 55, 20)
             }
             this.firstboxx += this.boxheight;//do more if statements for more items. to add: number amounts. can't be too hard
-        }  
-        this.firstboxx = 0; 
-        for (let i = 0; i < 10; i++){
+        }
+        this.firstboxx = 0;
+        for (let i = 0; i < 10; i++) {
             //if slot draw dot
-            if (i==this.selectedSlot){
+            if (i == this.selectedSlot) {
                 //draw
                 setcolor("yellow")
                 draw.beginPath();
-                staticCircle((this.firstboxx+(this.boxheight/2)), (screenH - this.boxheight+(this.boxheight/2)), this.boxheight/5, this.boxheight/5);
+                staticCircle((this.firstboxx + (this.boxheight / 2)), (screenH - this.boxheight + (this.boxheight / 2)), this.boxheight / 5, this.boxheight / 5);
                 draw.fill();
                 //move to next position
-                
+
             }
             this.firstboxx += this.boxheight;
             //do more if statements for more items. to add: number amounts. can't be too hard
         }
     }
-    use(){
-        if(this.array[this.selectedSlot].name == "berry"){
+    use() {
+        if (this.array[this.selectedSlot].name == "berry") {
             mainCharacter.hunger += 5;
             this.array[this.selectedSlot].quantity -= 1
         }
-        if(this.array[this.selectedSlot].quantity<=0){
+        if (this.array[this.selectedSlot].quantity <= 0) {
             this.array[this.selectedSlot].name = "";
             this.array[this.selectedSlot].quantity = 0;
         }

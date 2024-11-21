@@ -6,11 +6,15 @@ var onscreenChunks = [];
 //number of ticks per hour, used to run hourly things every tick instead(like hunger)
 var ticksPerHour;
 //number of ticks per second, used for secondly things(clock)
-var ticksPerSecond; 
+var ticksPerSecond;
 //multiply things that run 60 times a second by this to compensate for lower tps
 var movementComp;
 //list that will store all the plants in the world
 var plants = [];
+//things in touching distance
+var touchableThings = [];
+//the thing that will be interacted with if you press q
+var interactObject = "";
 var gameSize = {
     //how many chunks in x and y
     x: 10,
@@ -21,11 +25,20 @@ var gameSize = {
 //game configuration
 var conf = {
     treesPerChunk: 10,
+    bushesPerChunk: 3,
     //1 means every chunk has a wolf, 10 means 1 in 10 chunks have wolf
     chanceOfWolf: 1,
     //how fast wolves move
     wolfSpeed: 5,
-    wolfTurnSpeed: 1
+    wolfTurnSpeed: 1,
+    //every time a plant grows it decides when next to grow
+    //in a number of ticks between these two nummbers
+    //the plant will grow
+    maxGrowSpeed: 500,
+    minGrowSpeed: 1000,
+    //when a berry plant is created its randomized between these how many berries it can hold
+    maxBerries: 6,
+    minBerries: 3,
 }
 //global movement attributes
 var movement = {
@@ -82,8 +95,9 @@ var mainCharacter = new player({
     //it also makes you lose health faster    
     healDifficulty: 7,
     //how quickly your health goes up or down
-    healRate: 20
+    healRate: 20,
 });
+var reachDistance = 5;
 var hotbar = new inventory();
 //create array for chunks
 var chunks = createArray(gameSize.x, gameSize.y);
@@ -106,18 +120,24 @@ document.addEventListener('keydown', (e) => {
     if (e.key == "a" || e.key == "A" || e.key == "ArrowLeft") {
         movement.x -= 1;
     }
-    if (e.key == "1") {hotbar.selectedSlot=0;}
-    if (e.key == "2") {hotbar.selectedSlot=1;}
-    if (e.key == "3") {hotbar.selectedSlot=2;}
-    if (e.key == "4") {hotbar.selectedSlot=3;}
-    if (e.key == "5") {hotbar.selectedSlot=4;}
-    if (e.key == "6") {hotbar.selectedSlot=5;}
-    if (e.key == "7") {hotbar.selectedSlot=6;}
-    if (e.key == "8") {hotbar.selectedSlot=7;}
-    if (e.key == "9") {hotbar.selectedSlot=8;}
-    if (e.key == "0") {hotbar.selectedSlot=9;}
-    if (e.key == "e"){
+    if (e.key == "1") { hotbar.selectedSlot = 0; }
+    if (e.key == "2") { hotbar.selectedSlot = 1; }
+    if (e.key == "3") { hotbar.selectedSlot = 2; }
+    if (e.key == "4") { hotbar.selectedSlot = 3; }
+    if (e.key == "5") { hotbar.selectedSlot = 4; }
+    if (e.key == "6") { hotbar.selectedSlot = 5; }
+    if (e.key == "7") { hotbar.selectedSlot = 6; }
+    if (e.key == "8") { hotbar.selectedSlot = 7; }
+    if (e.key == "9") { hotbar.selectedSlot = 8; }
+    if (e.key == "0") { hotbar.selectedSlot = 9; }
+    if (e.key == "e") {
         hotbar.use()
+    }
+    if (e.key == "q") {
+        if (interactObject !== "") {
+            interactObject.interact();
+            console.log("there were " + touchableThings.length+ " other things that could be interacted")
+        }
     }
 
     //if you press shift and werent already running
@@ -144,7 +164,7 @@ document.addEventListener('keyup', (e) => {
     if (e.key == "a" || e.key == "A" || e.key == "ArrowLeft") {
         movement.x += 1;
     }
-    if (e.key == "e"){
+    if (e.key == "e") {
         useHeld = false;
     }
     //if you release shift and you were sprinting before
@@ -158,7 +178,7 @@ document.addEventListener('keyup', (e) => {
 });
 function updateClock() {
     //one minute passes every second
-    clock.minute += 1/ticksPerSecond;
+    clock.minute += 1 / ticksPerSecond;
     //one our passes every minute(60 game minutes)
     if (clock.minute >= 60) {
         clock.minute = 1;
@@ -233,7 +253,7 @@ function tempToColor(temperature) {
 /*it finds how far the center of the chunk is
 from the camera, and how far it has to be for it to be offscreen,
 using this it knows if it is onscreen*/
-function findChunks(){
+function findChunks() {
     let start = performance.now();
     //because trees stick over the edge of chunks(and will be seen disappearling)
     //we pretend the screen is bigger than it is
@@ -248,24 +268,25 @@ function findChunks(){
         //cycle through the chunks in a row
         row.forEach((currentChunk, x) => {
             //create gameoffset, this compensates for the screensize, and the camera pos
-            let gameXOffset = gameCamera.x - ((screenW) / 2) + (offset/2);
-            let gameYOffset = gameCamera.y - ((screenH) / 2) + (offset/2);
+            let gameXOffset = gameCamera.x - ((screenW) / 2) + (offset / 2);
+            let gameYOffset = gameCamera.y - ((screenH) / 2) + (offset / 2);
             //if onscreen where would the chunk be
-            let chunkXOnScreen = x*gameSize.chunk-gameXOffset;
-            let chunkYOnScreen = y*gameSize.chunk-gameYOffset;
+            let chunkXOnScreen = x * gameSize.chunk - gameXOffset;
+            let chunkYOnScreen = y * gameSize.chunk - gameYOffset;
 
-            if(insideScreen(chunkXOnScreen, chunkYOnScreen, gameSize.chunk+offset, gameSize.chunk+offset)){
+            if (insideScreen(chunkXOnScreen, chunkYOnScreen, gameSize.chunk + offset, gameSize.chunk + offset)) {
                 //if its undefined then generate it
-                if(chunks[x][y] == ""){
+                if (chunks[x][y] == "") {
                     //console.log("creating chunk x:" +x+", y:" +y);
                     chunks[x][y] = new chunk({
-                        startX: x*gameSize.chunk,
-                        startY: y*gameSize.chunk,
-                        endX: (x+1)*gameSize.chunk,
-                        endY: (y+1)*gameSize.chunk,
+                        startX: x * gameSize.chunk,
+                        startY: y * gameSize.chunk,
+                        endX: (x + 1) * gameSize.chunk,
+                        endY: (y + 1) * gameSize.chunk,
                         color: "#C0F7B3",
-                        seed: gameSeed*x*y,
+                        seed: gameSeed * x * y,
                         treeNumber: conf.treesPerChunk,
+                        bushNumber: conf.bushesPerChunk,
                         chanceOfWolf: conf.chanceOfWolf
                     });
                 }
@@ -276,7 +297,7 @@ function findChunks(){
     //console.log("chunks took " + (performance.now()-start) + " ms");
     //console.log(onscreenChunks.length + " loaded chunks");
 }
-function renderStuff(plantsToRender, animalsToRender){
+function renderStuff(plantsToRender, animalsToRender) {
     let start = performance.now();
     draw.beginPath();
     setcolor("rgba(12,46,32,0.5)");
@@ -310,6 +331,11 @@ function renderStuff(plantsToRender, animalsToRender){
     draw.fill();
 
     draw.beginPath();
+    setcolor("#FF0000");
+    plantsToRender.forEach((plant) => plant.red());
+    draw.fill();
+
+    draw.beginPath();
     setcolor("#808080");
     animalsToRender.forEach((animal) => animal.grey());
     draw.fill();
@@ -324,12 +350,12 @@ function renderStuff(plantsToRender, animalsToRender){
     //console.log("render took " + (performance.now()-start) + " ms");
 
 }
-function calcTps(){
-     //tps
-     const now = performance.now();;
-     msSinceLastFrame = now-times;
-     tps = Math.round(1000/msSinceLastFrame);
-     times = now;
+function calcTps() {
+    //tps
+    const now = performance.now();;
+    msSinceLastFrame = now - times;
+    tps = Math.round(1000 / msSinceLastFrame);
+    times = now;
 }
 function tick() {
     calcTps();
@@ -340,7 +366,7 @@ function tick() {
     //if tps is lower multiply by a higher number
     movementComp = 60 / tps;
     updateClock();
-        mainCharacter.move(movement.speed, movement.cx, movement.cy)
+    mainCharacter.move(movement.speed, movement.cx, movement.cy)
     gameCamera.move(cameraSpeed, mainCharacter.x, mainCharacter.y);
     //hunger and stuff
     mainCharacter.tickSurvival();
@@ -359,8 +385,27 @@ function tick() {
 
         //run activity for the chunk
         //we would move all the animals here
-        chunk.animals.forEach((animal)=>{animal.move();});
+        chunk.animals.forEach((animal) => { animal.move(); });
+        chunk.plants.forEach((plant) => { plant.grow(); });
     });
+    //we need to identify what things are in touching distance
+    touchableThings = [];
+    interactObject = "";
+    plantsToRender.forEach(plant => {
+        //find distance between us and plant
+        let xDiff = mainCharacter.x - plant.x;
+        let yDiff = mainCharacter.y - plant.y;
+        let distance = Math.sqrt(xDiff ^ 2 + yDiff ^ 2);
+        if (distance < reachDistance) {
+            //rn only bushes are interactable
+            if (plant instanceof bush) {
+                touchableThings.push(plant);
+            }
+        }
+    });
+    if (touchableThings.length !== 0) {
+        interactObject = touchableThings[0];
+    }
     //render
     renderStuff(plantsToRender, animalsToRender);
     //the other stuff
@@ -371,7 +416,7 @@ function tick() {
     bars.temp.draw(mainCharacter.temp, tempToColor(mainCharacter.temp));
     drawText(ticksPerSecond, screenW - 30, 20, 30);
     //Object.keys(everything);
-    
+
     window.requestAnimationFrame(tick);
 }
 start();
