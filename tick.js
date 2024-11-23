@@ -445,4 +445,7 @@ function findThingClosestToPlayer(tp){
     item.isdebug = true;
     return item;
 }
+function die(){
+    window.location.reload()
+}
 start();
