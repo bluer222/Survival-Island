@@ -34,10 +34,6 @@ function distanceToPoint(x1, y1, x2, y2) {
   return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
 }
 
-function random(min, max) { //when you call the function put the minimum number, a comma, and the maximum number
-  gameSeed = (gameSeed * 387420489 + 14348907) % 1e9;
-  return Math.floor(getRandom(gameSeed) * (max - min + 1) + min);
-}
 function createArray(rows, columns) {
   let array = [];
 

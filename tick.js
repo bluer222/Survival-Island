@@ -97,7 +97,7 @@ var mainCharacter = new player({
     //how quickly your health goes up or down
     healRate: 20,
 });
-var reachDistance = 5;
+var reachDistance = 75;
 var hotbar = new inventory();
 //create array for chunks
 var chunks = createArray(gameSize.x, gameSize.y);
@@ -280,7 +280,7 @@ function findChunks() {
             if (insideScreen(chunkXOnScreen, chunkYOnScreen, gameSize.chunk + offset, gameSize.chunk + offset)) {
                 //if its undefined then generate it
                 if (chunks[x][y] == "") {
-                    //console.log("creating chunk x:" +x+", y:" +y);
+                    console.log("creating chunk x:" +x+", y:" +y);
                     chunks[x][y] = new chunk({
                         startX: x * gameSize.chunk,
                         startY: y * gameSize.chunk,
@@ -299,7 +299,6 @@ function findChunks() {
     });
 }
 function renderStuff(plantsToRender, animalsToRender) {
-    let start = performance.now();
     draw.beginPath();
     setcolor("rgba(12,46,32,0.5)");
     plantsToRender.forEach((plant) => plant.shadow());
@@ -348,8 +347,6 @@ function renderStuff(plantsToRender, animalsToRender) {
         chunk.draw();
     });
     draw.stroke();
-    //console.log("render took " + (performance.now()-start) + " ms");
-
 }
 function calcTps() {
     //tps
@@ -358,6 +355,7 @@ function calcTps() {
     tps = Math.round(1000 / msSinceLastFrame);
     times = now;
 }
+let plantsToRender = [];
 function tick() {
     calcTps();
     //if tps == 0 then the user is in another tab or somthing so dont run the game
@@ -379,8 +377,7 @@ function tick() {
         grass.draw();
         //finds onscreen chunks, if not generated generate them
         findChunks();
-
-        let plantsToRender = [];
+        plantsToRender = [];
         let animalsToRender = [];
         onscreenChunks.forEach((chunk) => {
             //combine all of the stuff to render onto one list
@@ -390,8 +387,11 @@ function tick() {
 
             //run activity for the chunk
             //we would move all the animals here
-            chunk.animals.forEach((animal) => { animal.move(); });
-            chunk.plants.forEach((plant) => { plant.grow(); });
+            draw.beginPath();
+            setcolor("#ff69b4");
+            chunk.animals.forEach((animal) => { animal.move(); animal.debug();});
+            chunk.plants.forEach((plant) => { plant.grow(); plant.debug();});
+            draw.fill();
         });
         //we need to identify what things are in touching distance
         touchableThings = [];
@@ -400,7 +400,7 @@ function tick() {
             //find distance between us and plant
             let xDiff = mainCharacter.x - plant.x;
             let yDiff = mainCharacter.y - plant.y;
-            let distance = Math.sqrt(xDiff ^ 2 + yDiff ^ 2);
+            let distance = Math.sqrt((xDiff*xDiff)  + (yDiff*yDiff));
             if (distance < reachDistance) {
                 //rn only bushes are interactable
                 if (plant instanceof bush) {
@@ -423,5 +423,26 @@ function tick() {
         //Object.keys(everything);
     }
     window.requestAnimationFrame(tick);
+}
+function findThingClosestToPlayer(tp){
+    let closest = 10000000000000000000000000000000;
+    let item;
+    plantsToRender.forEach(plant => {
+        //find distance between us and plant
+        let xDiff = plant.x - mainCharacter.x;
+        let yDiff = plant.y-mainCharacter.y;
+        let distance = Math.sqrt((xDiff*xDiff) + (yDiff*yDiff));
+        if (distance < closest) {
+            closest = distance;
+            item = plant
+        }
+    });
+    if(tp){
+        mainCharacter.x = item.x;
+        mainCharacter.y = item.y;
+
+    }
+    item.isdebug = true;
+    return item;
 }
 start();

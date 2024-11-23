@@ -141,6 +141,8 @@ class chunk {
 class tree {
     constructor(x, y, seed) {
         this.seed = seed;
+        this.x = x;
+        this.y = y;
         //create branches object with the center branch
         this.branches = {
             x: [x],
@@ -211,6 +213,11 @@ class tree {
             rRect(this.branches.x[i] + this.branches.innerXOffset[i], this.branches.y[i] + this.branches.innerYOffset[i], this.branches.size[i] - 20, this.branches.size[i] - 20, 10);
         }
     }
+    debug(){
+        if(this.isdebug){
+            circle(this.x, this.y, 150, 150);
+        }
+    }
     red() {
 
     }
@@ -239,6 +246,11 @@ class wolf {
     //draw all {color here} parts of wolf
     grey() {
         circle(this.x, this.y, 100, 100)
+    }
+    debug(){
+        if(this.isdebug){
+            circle(this.x, this.y, 150, 150);
+        }
     }
     move() {
         /*
@@ -292,17 +304,17 @@ class bush {
         this.y = y;
         this.seed = seed;
         this.berries = [];
-        this.nextGrowTime = random(conf.maxGrowSpeed, conf.minGrowSpeed)
+        this.nextGrowTime = this.random(conf.maxGrowSpeed, conf.minGrowSpeed)
         //anywhere from 3 to 7 berry positions
-        for (let index = 0; index < random(conf.minBerries, conf.maxBerries); index++) {
-            this.berries.push({ x: random(-25, 25), y: random(-25, 25), hasBerry: this.random(0, 1) })
+        for (let index = 0; index < this.random(conf.minBerries, conf.maxBerries); index++) {
+            this.berries.push({ x: this.random(-25, 25), y: this.random(-25, 25), hasBerry: this.random(0, 1) })
         }
     }
     grow() {
         //at 60 fps this would be -1 but we must compensate for fps
         this.nextGrowTime -= movementComp;
         if (this.nextGrowTime <= 0) {
-            this.nextGrowTime = random(conf.maxGrowSpeed, conf.minGrowSpeed)
+            this.nextGrowTime = this.random(conf.maxGrowSpeed, conf.minGrowSpeed)
             for (let index = 0; index < this.berries.length; index++) {
                 const berry = this.berries[index];
                 if (berry.hasBerry == 0) {
@@ -327,7 +339,12 @@ class bush {
 
     }
     green() {
-        circle(this.x, this.y, 75, 75);
+            circle(this.x, this.y, 75, 75);
+    }
+    debug(){
+        if(this.isdebug){
+            circle(this.x, this.y, 150, 150);
+        }
     }
     red() {
         this.berries.forEach(berry => {
@@ -420,7 +437,6 @@ class inventory {
                 this.array[i].quantity += 1;
                 //logs where it was added and the inventory array
                 console.log(`Added ${this.array[i].name} in prexisting slot`)
-                console.log(this.array)
                 //item is added. return.
                 return true;
             }
