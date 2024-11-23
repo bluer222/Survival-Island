@@ -51,21 +51,22 @@ class player {
         //difference between optimal and current hunger
         const hungerDiff = Math.abs(this.healing.bestHunger - this.hunger);
         //devide your socre by the worst one to get a decimal where 1 = your trash and 0 = your perfect
-        //if you wonder why its is calculated seperatly its because worst case you can be farther from
-        //the best hunger than you can be from the best temp, so this makes them matter equally
+        //if you wonder why its is calculated seperatly its because:
+        //worst hunger you can be(0) is farther from perfect hunger(100) than the worst temp(0) is from the perfect temp(60)
+        //so this makes them matter equally
         const tempFraction = tempDiff / this.healing.bestTemp;
         const hungerFraction = hungerDiff / this.healing.bestHunger;
-        //convert the individual fractions to one fraction on the same scale
+        //convert the individual fractions to one fraction. devide by 2 to turn it from a 0-2 scale to a 0-1 scale
         const healScoreFraction = (tempFraction + hungerFraction) / 2;
         //right now healing is just as easy as losing health, this is too easy, fix it by multiplying by healdifficulty
-        //the best case stays as 0 but the wort case becomes healdifficulty
+        //the best case stays as 0 but the wort case becomes healdifficulty instead of 1
         const scaledHealScoreFraction = healScoreFraction * this.healing.healDifficulty;
         //subtract it from 1, now the best would be 1 and the worst would be 1-healDifficulty
         this.healScore = 1 - scaledHealScoreFraction
         //max healing ammount
         const maxHeal = 20;
-        //change health, see now that best case would be you heal the value of maxheal
-        //but worst case you loze healdifficutly times maxheal
+        //change health, see now that best case would be you gain 1*maxheal
+        //but worst case you lose healdifficutlty*maxheal
         this.health += (maxHeal * this.healScore) / ticksPerHour
         //make the values be in between 0 and 100
         this.health = clamp(this.health, 0, 100);
