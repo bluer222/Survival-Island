@@ -22,24 +22,7 @@ var gameSize = {
     //size of a chunk in px
     chunk: 1000,
 };
-//game configuration
-var conf = {
-    treesPerChunk: 10,
-    bushesPerChunk: 3,
-    //1 means every chunk has a wolf, 10 means 1 in 10 chunks have wolf
-    chanceOfWolf: 1,
-    //how fast wolves move
-    wolfSpeed: 5,
-    wolfTurnSpeed: 1,
-    //every time a plant grows it decides when next to grow
-    //in a number of ticks between these two nummbers
-    //the plant will grow
-    maxGrowSpeed: 500,
-    minGrowSpeed: 1000,
-    //when a berry plant is created its randomized between these how many berries it can hold
-    maxBerries: 6,
-    minBerries: 3,
-}
+
 //global movement attributes
 var movement = {
     //these are direct key inputs x = 1 if w pressed, -1 if s pressed
@@ -55,6 +38,26 @@ var movement = {
     defaultSpeed: 5,
     sprintSpeed: 7
 };
+//game configuration
+var conf = {
+    treesPerChunk: 10,
+    bushesPerChunk: 3,
+    //1 means every chunk has a wolf, 10 means 1 in 10 chunks have wolf
+    chanceOfWolf: 1,
+    //far wolves travel in one tick
+    //because of how its coded wolves usually move faster than this
+    wolfSpeed: movement.defaultSpeed-1,
+    //how far animals like wolves can see you from
+    animalSight: 150,
+    //every time a plant grows it decides when next to grow
+    //in a number of ticks between these two nummbers
+    //the plant will grow
+    maxGrowSpeed: 500,
+    minGrowSpeed: 1000,
+    //when a berry plant is created its randomized between these how many berries it can hold
+    maxBerries: 6,
+    minBerries: 3,
+}
 //how quickly does the camera go to the player pos in frames(less frames is faster)
 var cameraSpeed = 15;
 //world seed for creating identical worlds
@@ -253,6 +256,22 @@ function tempToColor(temperature) {
     }
     return "rgb(" + r + ", " + g + ", " + b + ")"
 }
+function generateChunk(x, y){
+    console.log("creating chunk x:" +x+", y:" +y);
+    chunks[x][y] = new chunk({
+        x: x,
+        y: y,
+        startX: x * gameSize.chunk,
+        startY: y * gameSize.chunk,
+        endX: (x + 1) * gameSize.chunk,
+        endY: (y + 1) * gameSize.chunk,
+        color: "#C0F7B3",
+        seed: gameSeed * x * y,
+        treeNumber: conf.treesPerChunk,
+        bushNumber: conf.bushesPerChunk,
+        chanceOfWolf: conf.chanceOfWolf
+    });
+}
 //this function finds if a chunk is onscreen
 /*it finds how far the center of the chunk is
 from the camera, and how far it has to be for it to be offscreen,
@@ -280,18 +299,7 @@ function findChunks() {
             if (insideScreen(chunkXOnScreen, chunkYOnScreen, gameSize.chunk + offset, gameSize.chunk + offset)) {
                 //if its undefined then generate it
                 if (chunks[x][y] == "") {
-                    console.log("creating chunk x:" +x+", y:" +y);
-                    chunks[x][y] = new chunk({
-                        startX: x * gameSize.chunk,
-                        startY: y * gameSize.chunk,
-                        endX: (x + 1) * gameSize.chunk,
-                        endY: (y + 1) * gameSize.chunk,
-                        color: "#C0F7B3",
-                        seed: gameSeed * x * y,
-                        treeNumber: conf.treesPerChunk,
-                        bushNumber: conf.bushesPerChunk,
-                        chanceOfWolf: conf.chanceOfWolf
-                    });
+                    generateChunk(x, y);
                 }
                 onscreenChunks.push(chunks[x][y]);
             }
@@ -340,6 +348,13 @@ function renderStuff(plantsToRender, animalsToRender) {
     animalsToRender.forEach((animal) => animal.grey());
     draw.fill();
 
+     //we would move all the animals here
+     draw.beginPath();
+     setcolor("#ff69b4");
+     animalsToRender.forEach((animal) => { animal.move(); animal.debug();});
+     plantsToRender.forEach((plant) => { plant.grow(); plant.debug();});
+     draw.fill();
+
     draw.lineWidth = 2;
     draw.beginPath();
     setcolor("#000000");
@@ -383,19 +398,12 @@ function tick() {
             //combine all of the stuff to render onto one list
             plantsToRender = plantsToRender.concat(chunk.plants);
             //chunks will also have animals and stuff to add
-            animalsToRender = animalsToRender.concat(chunk.animals);
-
-            //run activity for the chunk
-            //we would move all the animals here
-            draw.beginPath();
-            setcolor("#ff69b4");
-            chunk.animals.forEach((animal) => { animal.move(); animal.debug();});
-            chunk.plants.forEach((plant) => { plant.grow(); plant.debug();});
-            draw.fill();
+            animalsToRender = animalsToRender.concat(...chunk.animals);
         });
         //we need to identify what things are in touching distance
         touchableThings = [];
         interactObject = "";
+        //plants are interactable so this is what does that
         plantsToRender.forEach(plant => {
             //find distance between us and plant
             let xDiff = mainCharacter.x - plant.x;
@@ -406,6 +414,18 @@ function tick() {
                 if (plant instanceof bush) {
                     touchableThings.push(plant);
                 }
+            }
+        });
+        //animals are not interactable but if they are near the player they will see you
+        animalsToRender.forEach(animal => {
+            //find distance between us and plant
+            let xDiff = mainCharacter.x - animal.x;
+            let yDiff = mainCharacter.y - animal.y;
+            let distance = Math.sqrt((xDiff*xDiff)  + (yDiff*yDiff));
+            if (distance < conf.animalSight) {
+                animal.canSeePlayer = true;
+            }else{
+                animal.canSeePlayer = false;
             }
         });
         if (touchableThings.length !== 0) {

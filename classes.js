@@ -105,6 +105,8 @@ class chunk {
         }
     }
     constructor(property) {
+        this.x = property.x;
+        this.y = property.y
         this.startX = property.startX;
         this.startY = property.startY;
         this.endX = property.endX;
@@ -112,7 +114,7 @@ class chunk {
         this.color = property.color;
         this.seed = property.seed;
         this.plants = [];
-        this.animals = [];
+        this.animals = new Set();
         for (let i = 0; i < property.treeNumber; i++) {
             this.plants.push(
                 new tree(this.rndLocInChunk("x"), this.rndLocInChunk("y"), i * this.seed)
@@ -124,8 +126,8 @@ class chunk {
             );
         }
         if (this.random(1, property.chanceOfWolf) == 1) {
-            this.animals.push(
-                //new wolf(this.rndLocInChunk("x"), this.rndLocInChunk("y"), this.seed)
+            this.animals.add(
+                new wolf(this.rndLocInChunk("x"), this.rndLocInChunk("y"), this.seed, this.x, this.y)
             );
         }
     }
@@ -214,8 +216,8 @@ class tree {
             rRect(this.branches.x[i] + this.branches.innerXOffset[i], this.branches.y[i] + this.branches.innerYOffset[i], this.branches.size[i] - 20, this.branches.size[i] - 20, 10);
         }
     }
-    debug(){
-        if(this.isdebug){
+    debug() {
+        if (this.isdebug) {
             circle(this.x, this.y, 150, 150);
         }
     }
@@ -223,79 +225,6 @@ class tree {
 
     }
     grow(clock) {
-
-    }
-}
-class wolf {
-    constructor(x, y, seed) {
-        this.seed = seed;
-        this.x = x;
-        this.y = y;
-        this.health = 100;
-        this.movementGoalX = this.x + this.random(-1000, 1000);
-        this.movementGoalY = this.y + this.random(-1000, 1000);
-        this.speed = conf.wolfSpeed;
-        this.turnSpeed = conf.wolfTurnSpeed;
-
-        this.direction = this.random(0, 89);
-    }
-    //random function for the wolf that uses the wolfs seed
-    random(min, max) {
-        this.seed = (this.seed * 387420489 + 14348907) % 1e9;
-        return Math.floor(getRandom(this.seed) * (max - min + 1) + min);
-    }
-    //draw all {color here} parts of wolf
-    grey() {
-        circle(this.x, this.y, 100, 100)
-    }
-    debug(){
-        if(this.isdebug){
-            circle(this.x, this.y, 150, 150);
-        }
-    }
-    move() {
-        /*
-        if(nearbyplayer){
-            set movementGoal to player pos
-        }
-        */
-        let distanceToX = Math.abs(this.movementGoalX - this.x);
-        let distanceToY = Math.abs(this.movementGoalY - this.y);
-        //if distance can be moved in one movement
-        if (Math.sqrt(distanceToX * distanceToX + distanceToY * distanceToY) < this.speed * movementComp) {
-            this.x = this.movementGoalX;
-            this.y = this.movementGoalY
-            this.movementGoalX = this.x + random(-100, 100);
-            this.movementGoalY = this.y + random(-100, 100);
-            return
-        }
-        //create two proportion values, together these = 1
-        //this decides the direction it wants to face, inverse tangent accepts opposite/adgecent and give the angle
-        //if within one turn of correct angle then set correct angle
-        let directionToFace = Math.atan(distanceToX / distanceToY);
-        if (Math.abs(directionToFace - this.direction) < this.turnSpeed * movementComp) {
-            this.direction = directionToFace;
-        } else {
-            //otherwise turn twards correct direction
-            if (directionToFace > this.direction) {
-                this.direction += this.turnSpeed * movementComp;
-            } else {
-                this.direction -= this.turnSpeed * movementComp;
-
-            }
-
-        }
-        if (this.movementGoalX > this.x) {
-            //we're moving Right
-            this.x += Math.sin(directionToFace) * this.speed * movementComp;
-        } else {
-            this.x -= Math.sin(directionToFace) * this.speed * movementComp;
-        }
-        if (this.movementGoalY > this.y) {
-            this.y += Math.cos(directionToFace) * this.speed * movementComp;
-        } else {
-            this.y -= Math.cos(directionToFace) * this.speed * movementComp;
-        }
 
     }
 }
@@ -340,10 +269,10 @@ class bush {
 
     }
     green() {
-            circle(this.x, this.y, 75, 75);
+        circle(this.x, this.y, 75, 75);
     }
-    debug(){
-        if(this.isdebug){
+    debug() {
+        if (this.isdebug) {
             circle(this.x, this.y, 150, 150);
         }
     }
@@ -398,8 +327,8 @@ class camera {
     move(cameraSpeed, goalx, goaly) {
         this.xMomentum = ((goalx - this.x) / (cameraSpeed));
         this.yMomentum = ((goaly - this.y) / (cameraSpeed));
-        this.x += this.xMomentum*movementComp;
-        this.y += this.yMomentum*movementComp;
+        this.x += this.xMomentum * movementComp;
+        this.y += this.yMomentum * movementComp;
     }
 }
 class inventory {
@@ -544,5 +473,174 @@ class inventory {
             this.array[this.selectedSlot].name = "";
             this.array[this.selectedSlot].quantity = 0;
         }
+    }
+}
+class wolf {
+    constructor(x, y, seed, chunkx, chunky) {
+        this.chunkx = chunkx;
+        this.chunky = chunky;
+        this.canSeePlayer = false;
+        this.seed = seed;
+        this.x = x;
+        this.y = y;
+        this.health = 100;
+        this.speed = conf.wolfSpeed;
+
+        //how far along the bezier curve we are
+        this.t = 0.5;
+
+        this.pastLoc = this.randomPosition(this.x, this.y, 500); 
+        this.currentLoc = [this.x, this.y];
+        this.goalLoc = this.randomPosition(this.x, this.y, 500);
+    }
+    //random function for the wolf that uses the wolfs seed
+    random(min, max) {
+        this.seed = (this.seed * 387420489 + 14348907) % 1e9;
+        return Math.floor(getRandom(this.seed) * (max - min + 1) + min);
+    }
+    //draw all {color here} parts of wolf
+    grey() {
+        circle(this.x, this.y, 50, 50)
+    }
+    debug() {
+        if (this.isdebug) {
+            circle(this.x, this.y, 150, 150);
+        }
+    }
+    move() {
+        //we must hunt the player if visible
+        if(this.canSeePlayer){
+            this.pastLoc = this.currentLoc;
+            this.currentLoc = [this.x, this.y];
+            this.goalLoc = [mainCharacter.x, mainCharacter.y];
+            this.t = 0.5;
+        }
+
+        let newLoc = this.nextPoint(this.pastLoc, this.currentLoc, this.goalLoc, [this.x, this.y], this.speed*movementComp);
+        if(newLoc == "end"){
+            console.log("end");
+            this.pastLoc = this.currentLoc;
+            this.currentLoc = this.goalLoc;
+            this.goalLoc = this.randomPosition(this.goalLoc[0], this.goalLoc[1], 500);
+            this.t = 0.5;
+            newLoc = this.nextPoint(this.pastLoc, this.currentLoc, this.goalLoc, [this.x, this.y], this.speed*movementComp);
+        }
+        this.x = newLoc[0];
+        this.y = newLoc[1];
+    
+        this.updateChunk();
+    }
+    //ok, so we moved, now what chunk are we in
+    updateChunk() {
+
+        //to round to the nearest n you devide by n then you cut off decimals then you multiply by n
+        //heres an example 540 to the nearest 100
+        //540/100 = 5.4             Math.round(5.4) = 5          5*100 = 500
+
+        //but in this case we dont need to multiply at the end because we only want the number
+
+        //also we use floor to round down, chunk 0 is from 0 to 1000, not 0 to 499
+
+        let newx = Math.floor(this.x / gameSize.chunk);
+        let newy = Math.floor(this.y / gameSize.chunk);
+        if (newx != this.chunkx || newy != this.chunky) {
+            console.log("we were at " + [this.chunkx, this.chunky] + " but now were at " + [newx, newy] + " heres x and y " + [this.x, this.y]);
+            chunks[this.chunkx][this.chunky].animals.delete(this);
+            //generate chunk if needed
+            if (chunks[newx][newy] == "") {
+                generateChunk(newx, newy);
+            }
+            chunks[newx][newy].animals.add(this);
+
+            this.chunkx = newx;
+            this.chunky = newy;
+        }
+    }
+    randomPosition(startx, starty, distance) {
+        let distanceBetweenX = this.random(-distance, distance);
+        let newx = startx + distanceBetweenX;
+        //b squared  = c squared minus a squared
+        //b = sqrt(c squared minus a squared)
+        let distanceBetweenY = Math.sqrt(distance ** 2 - distanceBetweenX ** 2) * this.negitiveOrPositive();
+        let newy = starty + distanceBetweenY;
+        return [newx, newy]
+    }
+    negitiveOrPositive() {
+        return 1 - (2 * this.random(0, 1))
+    }
+    /*
+
+                          WARNING!!
+            Code beyond this point is ai generated
+
+                Programmer discretion advised
+
+    */
+    bezierCurveWithMidpoint(p0, p1, p2, t) {
+        /**
+         * Calculate a point on a quadratic Bézier curve where p1 is the actual midpoint.
+         *
+         * Parameters:
+         *   p0 (Array): Starting point [x0, y0].
+         *   p1 (Array): Midpoint [x1, y1] (true midpoint of the curve).
+         *   p2 (Array): Ending point [x2, y2].
+         *   t (Number): A value between 0 and 1 representing the position on the curve.
+         *
+         * Returns:
+         *   Array: The [x, y] coordinates of the point on the curve at t.
+         */
+
+        // Calculate the control point to ensure p1 is the actual midpoint
+        const cx = 2 * p1[0] - (p0[0] + p2[0]) / 2;
+        const cy = 2 * p1[1] - (p0[1] + p2[1]) / 2;
+
+        // Quadratic Bézier formula with derived control point
+        const x = Math.pow(1 - t, 2) * p0[0] + 2 * (1 - t) * t * cx + Math.pow(t, 2) * p2[0];
+        const y = Math.pow(1 - t, 2) * p0[1] + 2 * (1 - t) * t * cy + Math.pow(t, 2) * p2[1];
+
+        return [x, y];
+    }
+    nextPoint(p0, p1, p2, currentLoc, targetDistance) {
+        /**
+         * Generate the next point along the Bézier curve at a specified distance from the current point.
+         *
+         * Parameters:
+         *   p0 (Array): Starting point [x0, y0].
+         *   p1 (Array): Midpoint [x1, y1].
+         *   p2 (Array): Ending point [x2, y2].
+         *   currentX (Number): Current x-coordinate on the curve.
+         *   currentY (Number): Current y-coordinate on the curve.
+         *   targetDistance (Number): The desired distance from the current point to the next point.
+         *
+         * Returns:
+         *   Array: The next point on the curve [nextX, nextY] that is `targetDistance` away from the current point.
+         */
+    
+        let currentPoint = currentLoc;
+        let nextPoint = currentPoint;
+        let accumulatedDistance = 0;
+    
+        while (accumulatedDistance < targetDistance) {
+            // Increment t to move along the curve
+            this.t += 0.0001; // Small step to prevent skipping the target distance
+
+           // Stop if t exceeds 1 (end of the curve)
+           if (this.t >= 1) {
+                return "end";
+            }
+            // Get the next point on the curve
+            nextPoint = this.bezierCurveWithMidpoint(p0, p1, p2,  this.t);
+    
+            // Calculate the distance from the current point to the next point
+            const dx = nextPoint[0] - currentPoint[0];
+            const dy = nextPoint[1] - currentPoint[1];
+            const dist = Math.sqrt(dx * dx + dy * dy);
+    
+            // Accumulate the distance
+            accumulatedDistance += dist;
+            currentPoint = nextPoint; // Move to the new point
+        }
+    
+        return nextPoint;
     }
 }
