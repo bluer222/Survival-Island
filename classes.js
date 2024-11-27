@@ -159,38 +159,45 @@ class tree {
         this.x = x;
         this.y = y;
         this.isdebug = false;
-        //create branches object and add the center branch
+        //stats of the main branch
+        this.size = this.random(75, 100);
+        //inside of the tree's leave rectangle theres a smaller light green rectangle
+        //this decides how much up and how much to the left it will be
+        //why only up and to the left? idfk
+        this.innerXOffset = this.random(0, 8);
+        this.innerYOffset = this.random(-8, 0);
+        //create branches object
         this.branches = {
-            x: [x],
-            y: [y],
-            size: [this.random(75, 100)],
-            innerXOffset: [this.random(0, 8)],
-            innerYOffset: [this.random(-8, 0)],
+            x: [],
+            y: [],
+            size: [],
+            innerXOffset: [],
+            innerYOffset: [],
         };
         //decide how many side branches to have
         this.branchNumber = this.random(0, 3);
         //how far the branches have to be from main branch
         //we want branches to have a specific ammount of gap from the center
-        const mainSize = this.branches.size[0] / 2
+        const mainSize = this.size / 2
         //create the branches
         for (let i = 0; i < this.branchNumber; i++) {
             //add a branch of random size
             this.branches.size.push(this.random(40, 50));
             //how far away from the center will this branch need to be, we add 12px to this later to make a gap
-            const minDist = mainSize + (this.branches.size[i+1] / 2);
+            const minDist = mainSize + (this.branches.size[i] / 2);
             //so basically branches could stick out from 4 different sides
-            //a left sticking branch will have an x of the tree's x - minDist
+            //a left sticking branch will have an x of - minDist
             //then the y is just randomized
             //first we need to decide between left/right and up/down
             if (this.random(1, 2) == 1) {
                 //if our branch is sticking left/right
                 //first we set the x, this is either +minDist or +minDist because if it was in the middle the branch could end up inside the tree
-                this.branches.x.push(x + (minDist + 12) * this.negOrPos())
+                this.branches.x.push((minDist + 12) * this.negOrPos())
                 //then we randomize the y
-                this.branches.y.push(y + this.random(-minDist, minDist));
+                this.branches.y.push(this.random(-minDist, minDist));
             } else {
-                this.branches.y.push(y + (minDist + 12) * this.negOrPos())
-                this.branches.x.push(x + this.random(-minDist, minDist));
+                this.branches.y.push((minDist + 12) * this.negOrPos())
+                this.branches.x.push(this.random(-minDist, minDist));
             }
             //inside of the tree's leave rectangle theres a smaller light green rectangle
             //this decides how much up and how much to the left it will be
@@ -210,34 +217,44 @@ class tree {
     }
     //draw shadow
     shadow() {
+        //draw main branch shadow
+        rRect(this.x, this.y+ 10, this.size + 4, this.size + 4, 10);
+        //draw side branches shadow
         for (let i = 0; i < this.branches.x.length; i++) {
-            rRect(this.branches.x[i], this.branches.y[i] + 10, this.branches.size[i] + 4, this.branches.size[i] + 4, 10);
-            line(this.branches.x[0], this.branches.y[0] + 10, this.branches.x[i], this.branches.y[i] + 10, 18);
+            rRect(this.x+this.branches.x[i], this.y+this.branches.y[i] + 10, this.branches.size[i] + 4, this.branches.size[i] + 4, 10);
+            //draw line from center banch to side branch
+            line(this.x, this.y + 10, this.x+this.branches.x[i], this.y+this.branches.y[i] + 10, 18);
         }
     }
     //draw all {color here} parts of tree
     brown() {
-        //draw branches
+        //draw branches from center to side branches
         for (let i = 0; i < this.branches.x.length; i++) {
-            line(this.branches.x[0], this.branches.y[0], this.branches.x[i], this.branches.y[i]);
+            line(this.x, this.y, this.x+this.branches.x[i], this.y+this.branches.y[i]);
         }
     }
     darkGreen() {
+        //draw main branch
+        rRect(this.x, this.y, this.size + 4, this.size + 4, 10);
         //draw leaves outline
         for (let i = 0; i < this.branches.x.length; i++) {
-            rRect(this.branches.x[i], this.branches.y[i], this.branches.size[i] + 4, this.branches.size[i] + 4, 10);
+            rRect(this.x+this.branches.x[i], this.y+this.branches.y[i], this.branches.size[i] + 4, this.branches.size[i] + 4, 10);
         }
     }
     green() {
+        //draw main branch
+        rRect(this.x, this.y, this.size, this.size, 10);
         //draw leaves
         for (let i = 0; i < this.branches.x.length; i++) {
-            rRect(this.branches.x[i], this.branches.y[i], this.branches.size[i], this.branches.size[i], 10);
+            rRect(this.x+this.branches.x[i], this.y+this.branches.y[i], this.branches.size[i] , this.branches.size[i], 10);
         }
     }
     lightGreen() {
+        //draw main innerleaves
+        rRect(this.x + this.innerXOffset, this.y + this.innerYOffset, this.size - 20, this.size - 20, 10);
         //draw innerleaves
         for (let i = 0; i < this.branches.x.length; i++) {
-            rRect(this.branches.x[i] + this.branches.innerXOffset[i], this.branches.y[i] + this.branches.innerYOffset[i], this.branches.size[i] - 20, this.branches.size[i] - 20, 10);
+            rRect(this.x+this.branches.x[i] + this.branches.innerXOffset[i], this.y+this.branches.y[i] + this.branches.innerYOffset[i], this.branches.size[i] - 20, this.branches.size[i] - 20, 10);
         }
     }
     //if we are debugging then draw a pink circle around it
