@@ -28,6 +28,7 @@ class player {
         this.healScore = 0;
     }
     draw() {
+        //draw the player
         draw.beginPath();
         setcolor("tan");
         circle(this.x, this.y, 50, 50);
@@ -72,7 +73,7 @@ class player {
         this.health = clamp(this.health, 0, 100);
         this.hunger = clamp(this.hunger, 0, 100);
         this.temp = clamp(this.temp, 0, 100);
-        //die
+        //die if our health is 0
         if (this.health == 0) {
             die();
         }
@@ -80,23 +81,26 @@ class player {
 }
 class bar {
     constructor(x, y, width, height) {
-        //center location
+        //store our variables
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
     }
     draw(fillLevel, color) {
+        //draw the border around the outside
         draw.beginPath();
         setcolor(color);
         stborderRect(this.x, this.y, this.width, this.height)
         draw.stroke();
+        //draw the bar itself with 2px of gap on all sides, 1px for border and 1px just as gap
         draw.beginPath();
         staticRect(this.x + 2, this.y + 2, (this.width * (fillLevel / 100)) - 4, this.height - 4);
         draw.fill();
     }
 }
 class chunk {
+    //creates a random x or y location in the chunk
     rndLocInChunk(XorY) {
         if (XorY == "x") {
             return this.random(this.startX, this.endX)
@@ -105,16 +109,22 @@ class chunk {
         }
     }
     constructor(property) {
+        //chunk cordinates, the chunk at the top left would be 0, 0 then below that is 0, 1
         this.x = property.x;
         this.y = property.y
+        //start and end cordinates, the top left chunk is from 0, 0 to 1000, 1000(at time of writing gamesize.chunk = 1000)
         this.startX = property.startX;
         this.startY = property.startY;
         this.endX = property.endX;
         this.endY = property.endY;
-        this.color = property.color;
+        //seed of the chunk, variants of this are passed to the trees etc
         this.seed = property.seed;
+        //array of plant in the chunk
         this.plants = [];
+        //animals must be a set instead because animals often move between chunks
+        //unlike arrays you can do set.delete(element) instead of finding indexof element then deleting that index from the list
         this.animals = new Set();
+        //add a number of trees and bushes equal to treenumber, asign seeds based on order of adding
         for (let i = 0; i < property.treeNumber; i++) {
             this.plants.push(
                 new tree(this.rndLocInChunk("x"), this.rndLocInChunk("y"), i * this.seed)
@@ -125,6 +135,7 @@ class chunk {
                 new bush(this.rndLocInChunk("x"), this.rndLocInChunk("y"), i * this.seed)
             );
         }
+        //add a wolf based on chance, give it the chunk x and y so it can remove itself when entering a new chunk
         if (this.random(1, property.chanceOfWolf) == 1) {
             this.animals.add(
                 new wolf(this.rndLocInChunk("x"), this.rndLocInChunk("y"), this.seed, this.x, this.y)
@@ -132,7 +143,7 @@ class chunk {
         }
     }
     draw() {
-        //draw chunk
+        //draw chunk border
         borderRect(this.startX, this.startY, gameSize.chunk, gameSize.chunk);
     }
     //random function for the chunk that uses the chunks seed
@@ -143,10 +154,12 @@ class chunk {
 }
 class tree {
     constructor(x, y, seed) {
+        //store the seed and location given by the chunk
         this.seed = seed;
         this.x = x;
         this.y = y;
-        //create branches object with the center branch
+        this.isdebug = false;
+        //create branches object and add the center branch
         this.branches = {
             x: [x],
             y: [y],
@@ -154,25 +167,39 @@ class tree {
             innerXOffset: [this.random(0, 8)],
             innerYOffset: [this.random(-8, 0)],
         };
-        //number of side brancehs
-        this.branchNumber = this.random(0, 3) + 1;
+        //decide how many side branches to have
+        this.branchNumber = this.random(0, 3);
         //how far the branches have to be from main branch
+        //we want branches to have a specific ammount of gap from the center
         const mainSize = this.branches.size[0] / 2
         //create the branches
-        for (let i = 1; i < this.branchNumber; i++) {
+        for (let i = 0; i < this.branchNumber; i++) {
+            //add a branch of random size
             this.branches.size.push(this.random(40, 50));
-            const minDist = mainSize + (this.branches.size[i] / 2);
+            //how far away from the center will this branch need to be, we add 12px to this later to make a gap
+            const minDist = mainSize + (this.branches.size[i+1] / 2);
+            //so basically branches could stick out from 4 different sides
+            //a left sticking branch will have an x of the tree's x - minDist
+            //then the y is just randomized
+            //first we need to decide between left/right and up/down
             if (this.random(1, 2) == 1) {
+                //if our branch is sticking left/right
+                //first we set the x, this is either +minDist or +minDist because if it was in the middle the branch could end up inside the tree
                 this.branches.x.push(x + (minDist + 12) * this.negOrPos())
+                //then we randomize the y
                 this.branches.y.push(y + this.random(-minDist, minDist));
             } else {
                 this.branches.y.push(y + (minDist + 12) * this.negOrPos())
                 this.branches.x.push(x + this.random(-minDist, minDist));
             }
+            //inside of the tree's leave rectangle theres a smaller light green rectangle
+            //this decides how much up and how much to the left it will be
+            //why only up and to the left? idfk
             this.branches.innerYOffset.push(this.random(-8, 0));
             this.branches.innerXOffset.push(this.random(0, 8));
         }
     }
+    //outputs -1 or 1 so you can multiply by negitiveOrPositive() to get negitive or positive
     negOrPos() {
         return this.random(0, 1) < 0.5 ? -1 : 1
     }
@@ -181,61 +208,63 @@ class tree {
         this.seed = (this.seed * 387420489 + 14348907) % 1e9;
         return Math.floor(getRandom(this.seed) * (max - min + 1) + min);
     }
+    //draw shadow
     shadow() {
-        //draw shadow
         for (let i = 0; i < this.branches.x.length; i++) {
             rRect(this.branches.x[i], this.branches.y[i] + 10, this.branches.size[i] + 4, this.branches.size[i] + 4, 10);
             line(this.branches.x[0], this.branches.y[0] + 10, this.branches.x[i], this.branches.y[i] + 10, 18);
         }
     }
-    //draw all brown parts of tree
+    //draw all {color here} parts of tree
     brown() {
         //draw branches
         for (let i = 0; i < this.branches.x.length; i++) {
             line(this.branches.x[0], this.branches.y[0], this.branches.x[i], this.branches.y[i]);
         }
     }
-    //draw all {color here} parts of tree
     darkGreen() {
         //draw leaves outline
         for (let i = 0; i < this.branches.x.length; i++) {
             rRect(this.branches.x[i], this.branches.y[i], this.branches.size[i] + 4, this.branches.size[i] + 4, 10);
         }
     }
-    //draw all {color here} parts of tree
     green() {
         //draw leaves
         for (let i = 0; i < this.branches.x.length; i++) {
             rRect(this.branches.x[i], this.branches.y[i], this.branches.size[i], this.branches.size[i], 10);
         }
     }
-    //draw all {color here} parts of tree
     lightGreen() {
         //draw innerleaves
         for (let i = 0; i < this.branches.x.length; i++) {
             rRect(this.branches.x[i] + this.branches.innerXOffset[i], this.branches.y[i] + this.branches.innerYOffset[i], this.branches.size[i] - 20, this.branches.size[i] - 20, 10);
         }
     }
+    //if we are debugging then draw a pink circle around it
     debug() {
         if (this.isdebug) {
             circle(this.x, this.y, 150, 150);
         }
     }
+    //these are bush funtions that are run on all plants
     red() {
-
     }
     grow(clock) {
-
     }
 }
 class bush {
     constructor(x, y, seed) {
+        //store the seed and location given by the chunk
         this.x = x;
         this.y = y;
         this.seed = seed;
-        this.berries = [];
+        this.isdebug = false;
+        ///this is how many ticks it will be before one of the berries grows
         this.nextGrowTime = this.random(conf.maxGrowSpeed, conf.minGrowSpeed)
-        //anywhere from 3 to 7 berry positions
+        //this will store our barries
+        this.berries = [];
+        //anywhere from conf.minBerries(3) to conf.maxBerries(7) berry positions
+        //each of these barries have an x and y offsetted by an ammount from the center
         for (let index = 0; index < this.random(conf.minBerries, conf.maxBerries); index++) {
             this.berries.push({ x: this.random(-25, 25), y: this.random(-25, 25), hasBerry: this.random(0, 1) })
         }
@@ -243,8 +272,11 @@ class bush {
     grow() {
         //at 60 fps this would be -1 but we must compensate for fps
         this.nextGrowTime -= movementComp;
+        //if the time has passed
         if (this.nextGrowTime <= 0) {
+            //set a new growtime
             this.nextGrowTime = this.random(conf.maxGrowSpeed, conf.minGrowSpeed)
+            //go through the berries and grow the first open one on th elist
             for (let index = 0; index < this.berries.length; index++) {
                 const berry = this.berries[index];
                 if (berry.hasBerry == 0) {
@@ -255,12 +287,13 @@ class bush {
         }
     }
     interact() {
-        //find a berry
+        //go through the berry list and find a grown one
         for (let index = 0; index < this.berries.length; index++) {
             const berry = this.berries[index];
             if (berry.hasBerry == 1) {
                 //try to add berry
                 if (hotbar.addItem("berry")) {
+                    //if sucessfully added then remove the berry
                     berry.hasBerry = 0;
                 }
                 return
@@ -268,14 +301,17 @@ class bush {
         }
 
     }
+    //render all green parts of the bush
     green() {
         circle(this.x, this.y, 75, 75);
     }
+    //if we are debugging then draw a pink circle around it
     debug() {
         if (this.isdebug) {
             circle(this.x, this.y, 150, 150);
         }
     }
+    //render red parts(berries)
     red() {
         this.berries.forEach(berry => {
             if (berry.hasBerry) {
@@ -283,20 +319,20 @@ class bush {
             }
         });
     }
+    //render shadow
+    //note to future: when adding day/night why not make shadows move around
     shadow() {
         circle(this.x, this.y + 3, 75, 75);
-
     }
     //draw all {color here} parts of bush
+    //we need to have all the tree colors because all plants are run the same way
     brown() {
-
     }
     darkGreen() {
-
     }
     lightGreen() {
-
     }
+    //random function using the seed
     random(min, max) {
         this.seed = (this.seed * 387420489 + 14348907) % 1e9;
         return Math.floor(getRandom(this.seed) * (max - min + 1) + min);
@@ -318,22 +354,24 @@ class backround {
 }
 class camera {
     constructor() {
-        //center location
+        //we start with a centered locaton and no momentum
         this.x = ((gameSize.x * gameSize.chunk) / 2);
         this.y = ((gameSize.y * gameSize.chunk) / 2);
         this.xMomentum = 0;
         this.yMomentum = 0;
     }
     move(cameraSpeed, goalx, goaly) {
+        //this will make it so that we move twards the player fast when thier far away but slow when thier close
         this.xMomentum = ((goalx - this.x) / (cameraSpeed));
         this.yMomentum = ((goaly - this.y) / (cameraSpeed));
+        //multiply by movementComp so even in low fps it moves the same speed
         this.x += this.xMomentum * movementComp;
         this.y += this.yMomentum * movementComp;
     }
 }
 class inventory {
     constructor() {
-        //array of items
+        //create array of items
         this.array = [{ name: "", quantity: 0 },
         { name: "", quantity: 0 },
         { name: "", quantity: 0 },
@@ -359,11 +397,7 @@ class inventory {
         for (let i = 0; i < 10; i++) {
             //if we already have a stack of the item and it has room 
             if (item == this.array[i].name && this.array[i].quantity < this.stacksize) {
-                // log shit for debugging
-                // console.log(this.array[i].name);
-                // console.log(item)
-
-                //add an item to that stacks
+                //add an item to that stack
                 this.array[i].quantity += 1;
                 //logs where it was added and the inventory array
                 console.log(`Added ${this.array[i].name} in prexisting slot`)
@@ -371,7 +405,8 @@ class inventory {
                 return true;
             }
         }
-        //once we find that we can't put item in any existing parts we loop again
+        //if there is no open slot then we add to the selected slot if open
+        //this makes more sense than adding to the first slot
         if (this.array[this.selectedSlot].quantity == 0) {
             //make the stack be the item
             this.array[this.selectedSlot].name = item;
@@ -381,6 +416,7 @@ class inventory {
             console.log(`Added ${this.array[this.selectedSlot].name} in new slot`)
             return true;
         }
+        //ok now we just go through the list for any empty slot
         for (let i = 0; i < 10; i++) {
             //if this slot is empty
             if (this.array[i].quantity == 0) {
@@ -393,7 +429,7 @@ class inventory {
                 return true;
             }
         }
-        //if we couldn't fit an item, return
+        //if we reached this point without returng then theres no space, return false
         return false
     }
     //draws the inventory
@@ -477,18 +513,22 @@ class inventory {
 }
 class wolf {
     constructor(x, y, seed, chunkx, chunky) {
+        //which chunk are we in?
+        //top left chunk is 0, 0 then below that is 0, 1
         this.chunkx = chunkx;
         this.chunky = chunky;
+        //is the player within seeing range
         this.canSeePlayer = false;
+        //store our variables
         this.seed = seed;
         this.x = x;
         this.y = y;
         this.health = 100;
-        this.speed = conf.wolfSpeed;
 
         //how far along the bezier curve we are
         this.t = 0.5;
 
+        //where we were and where we're going
         this.pastLoc = this.randomPosition(this.x, this.y, 500); 
         this.currentLoc = [this.x, this.y];
         this.goalLoc = this.randomPosition(this.x, this.y, 500);
@@ -523,34 +563,38 @@ class wolf {
     move() {
         //we must hunt the player if visible
         if(this.canSeePlayer){
+            //set back all the variables and set a new goal of the player
             this.pastLoc = this.currentLoc;
             this.currentLoc = [this.x, this.y];
             this.goalLoc = [mainCharacter.x, mainCharacter.y];
             this.t = 0.5;
         }
-
-        let newLoc = this.nextPoint(this.pastLoc, this.currentLoc, this.goalLoc, [this.x, this.y], this.speed*movementComp);
+        //get the next location along the curve
+        let newLoc = this.nextPoint(this.pastLoc, this.currentLoc, this.goalLoc, [this.x, this.y], conf.wolfSpeed*movementComp);
+        //if we reached the end of the curve
         if(newLoc == "end"){
-            console.log("end");
+            //set back all the variables
             this.pastLoc = this.currentLoc;
             this.currentLoc = this.goalLoc;
+            //get a new goal
             this.goalLoc = this.randomPosition(this.goalLoc[0], this.goalLoc[1], 500);
             this.t = 0.5;
-            newLoc = this.nextPoint(this.pastLoc, this.currentLoc, this.goalLoc, [this.x, this.y], this.speed*movementComp);
+            //calculate where to move this tick
+            newLoc = this.nextPoint(this.pastLoc, this.currentLoc, this.goalLoc, [this.x, this.y], conf.wolfSpeed*movementComp);
         }
+        //move to the new location
         this.x = newLoc[0];
         this.y = newLoc[1];
     
         //is the player close enough to take damage
+        //only calculate if we know we must be close
         if(this.canSeePlayer){
+            //actually get the distance
             let distanceToPlayer = Math.sqrt((this.x-mainCharacter.x)**2+(this.y-mainCharacter.y)**2);
+            //if its within range then attack
             if(distanceToPlayer < conf.animalRange){
                 mainCharacter.health -= conf.animalPower / ticksPerSecond;
             }
-            this.pastLoc = this.currentLoc;
-            this.currentLoc = [this.x, this.y];
-            this.goalLoc = [mainCharacter.x, mainCharacter.y];
-            this.t = 0.5;
         }
 
         this.updateChunk();
@@ -568,28 +612,38 @@ class wolf {
 
         let newx = Math.floor(this.x / gameSize.chunk);
         let newy = Math.floor(this.y / gameSize.chunk);
+
+        //so are we actually in a new chunk
         if (newx != this.chunkx || newy != this.chunky) {
+            //fuck we are
             console.log("we were at " + [this.chunkx, this.chunky] + " but now were at " + [newx, newy] + " heres x and y " + [this.x, this.y]);
+            //remove ourselves from the old chunk
             chunks[this.chunkx][this.chunky].animals.delete(this);
-            //generate chunk if needed
+            //generate the new chunk if needed
             if (chunks[newx][newy] == "") {
                 generateChunk(newx, newy);
             }
+            //add ourselves to the new chunk
             chunks[newx][newy].animals.add(this);
-
+            //update this so in the future we can remove ourselves again
             this.chunkx = newx;
             this.chunky = newy;
         }
     }
+    //makes a random position thats a specific distnace from a start
     randomPosition(startx, starty, distance) {
+        //randomly choose a x
         let distanceBetweenX = this.random(-distance, distance);
         let newx = startx + distanceBetweenX;
+        //now we must choose a y so the distance is correct
         //b squared  = c squared minus a squared
         //b = sqrt(c squared minus a squared)
+        //calculate the y
         let distanceBetweenY = Math.sqrt(distance ** 2 - distanceBetweenX ** 2) * this.negitiveOrPositive();
         let newy = starty + distanceBetweenY;
         return [newx, newy]
     }
+    //outputs -1 or 1 so you can multiply by negitiveOrPositive() to get negitive or positive
     negitiveOrPositive() {
         return 1 - (2 * this.random(0, 1))
     }
