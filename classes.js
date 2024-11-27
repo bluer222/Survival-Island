@@ -507,6 +507,19 @@ class wolf {
             circle(this.x, this.y, 150, 150);
         }
     }
+    //heres a summary of how wolves work
+    //we draw a bezier curve between our past location our current location and a goal
+    //the current location is the midpoint and the others are endpoints
+    //we start halfway along the curve because the curve starts at a past location
+    //for the next while, we are going to follow this curve
+    //we use a besier curve function, it accepts these points and a number from 0-1 of how far along the curve
+    //the thing is incrmenting this number by for example 0.1 will not always move the same ammount
+    //this.nextpoint increases the number by 0.0001 until the distance between currentlocation and output is > than wolfspeed
+    //this is why wolves move slighly faster than conf.wolfspeed
+    //when the number reaches 1, we have reached the end of the curve and draw a new curve
+    //what used to be currentloc becomes pastloc we update currentloc to be the current loc and we choose a future loc
+    //one change we may want to make is when chasing the player, the curve only updates once a second or somthing
+    //this will make wolves slow to respond to position changes(we could also make the wolf overshoot the player)
     move() {
         //we must hunt the player if visible
         if(this.canSeePlayer){
