@@ -49,6 +49,10 @@ var conf = {
     wolfSpeed: movement.defaultSpeed-1,
     //how far animals like wolves can see you from
     animalSight: 150,
+    //how far animals like wolves can damage you from
+    animalRange: 75,
+    //how much damage animals like wolves can do per second
+    animalPower: 5,
     //every time a plant grows it decides when next to grow
     //in a number of ticks between these two nummbers
     //the plant will grow

@@ -528,6 +528,18 @@ class wolf {
         this.x = newLoc[0];
         this.y = newLoc[1];
     
+        //is the player close enough to take damage
+        if(this.canSeePlayer){
+            let distanceToPlayer = Math.sqrt((this.x-mainCharacter.x)**2+(this.y-mainCharacter.y)**2);
+            if(distanceToPlayer < conf.animalRange){
+                mainCharacter.health -= conf.animalPower / ticksPerSecond;
+            }
+            this.pastLoc = this.currentLoc;
+            this.currentLoc = [this.x, this.y];
+            this.goalLoc = [mainCharacter.x, mainCharacter.y];
+            this.t = 0.5;
+        }
+
         this.updateChunk();
     }
     //ok, so we moved, now what chunk are we in
