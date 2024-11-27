@@ -201,7 +201,7 @@ class tree {
     }
     //outputs -1 or 1 so you can multiply by negitiveOrPositive() to get negitive or positive
     negOrPos() {
-        return this.random(0, 1) < 0.5 ? -1 : 1
+        return 1 - (2 * this.random(0, 1))
     }
     //random function for the tree that uses the trees seed
     random(min, max) {
