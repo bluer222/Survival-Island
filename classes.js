@@ -218,19 +218,19 @@ class tree {
     //draw shadow
     shadow() {
         //draw main branch shadow
-        rRect(this.x, this.y+ 10, this.size + 4, this.size + 4, 10);
+        rRect(this.x, this.y + 10, this.size + 4, this.size + 4, 10);
         //draw side branches shadow
         for (let i = 0; i < this.branches.x.length; i++) {
-            rRect(this.x+this.branches.x[i], this.y+this.branches.y[i] + 10, this.branches.size[i] + 4, this.branches.size[i] + 4, 10);
+            rRect(this.x + this.branches.x[i], this.y + this.branches.y[i] + 10, this.branches.size[i] + 4, this.branches.size[i] + 4, 10);
             //draw line from center banch to side branch
-            line(this.x, this.y + 10, this.x+this.branches.x[i], this.y+this.branches.y[i] + 10, 18);
+            line(this.x, this.y + 10, this.x + this.branches.x[i], this.y + this.branches.y[i] + 10, 18);
         }
     }
     //draw all {color here} parts of tree
     brown() {
         //draw branches from center to side branches
         for (let i = 0; i < this.branches.x.length; i++) {
-            line(this.x, this.y, this.x+this.branches.x[i], this.y+this.branches.y[i]);
+            line(this.x, this.y, this.x + this.branches.x[i], this.y + this.branches.y[i]);
         }
     }
     darkGreen() {
@@ -238,7 +238,7 @@ class tree {
         rRect(this.x, this.y, this.size + 4, this.size + 4, 10);
         //draw leaves outline
         for (let i = 0; i < this.branches.x.length; i++) {
-            rRect(this.x+this.branches.x[i], this.y+this.branches.y[i], this.branches.size[i] + 4, this.branches.size[i] + 4, 10);
+            rRect(this.x + this.branches.x[i], this.y + this.branches.y[i], this.branches.size[i] + 4, this.branches.size[i] + 4, 10);
         }
     }
     green() {
@@ -246,7 +246,7 @@ class tree {
         rRect(this.x, this.y, this.size, this.size, 10);
         //draw leaves
         for (let i = 0; i < this.branches.x.length; i++) {
-            rRect(this.x+this.branches.x[i], this.y+this.branches.y[i], this.branches.size[i] , this.branches.size[i], 10);
+            rRect(this.x + this.branches.x[i], this.y + this.branches.y[i], this.branches.size[i], this.branches.size[i], 10);
         }
     }
     lightGreen() {
@@ -254,7 +254,7 @@ class tree {
         rRect(this.x + this.innerXOffset, this.y + this.innerYOffset, this.size - 20, this.size - 20, 10);
         //draw innerleaves
         for (let i = 0; i < this.branches.x.length; i++) {
-            rRect(this.x+this.branches.x[i] + this.branches.innerXOffset[i], this.y+this.branches.y[i] + this.branches.innerYOffset[i], this.branches.size[i] - 20, this.branches.size[i] - 20, 10);
+            rRect(this.x + this.branches.x[i] + this.branches.innerXOffset[i], this.y + this.branches.y[i] + this.branches.innerYOffset[i], this.branches.size[i] - 20, this.branches.size[i] - 20, 10);
         }
     }
     //if we are debugging then draw a pink circle around it
@@ -398,9 +398,7 @@ class inventory {
         { name: "", quantity: 0 },
         { name: "", quantity: 0 },
         { name: "", quantity: 0 },
-        { name: "", quantity: 0 }]
-        //badly named. the x coord of the current box
-        this.firstboxx = 0
+        { name: "", quantity: 0 }];
         //how wide and tall the boxes are
         this.boxheight = 75;
         //how wide and tall the selected box is
@@ -408,6 +406,8 @@ class inventory {
         this.stacksize = 5;
         //selected slot
         this.selectedSlot = 0;
+        //find how wide the bar is 
+        this.width = this.boxheight * 10;
     }
     addItem(item) {
         //loop through our array
@@ -451,13 +451,14 @@ class inventory {
     }
     //draws the inventory
     render() {
-        //set us to have our box start in the corner
-        this.firstboxx = 0;
+        //the x coordinate of the first box
+        //used for centering the inventory bar
+        this.startx = (screenW - this.width) / 2;
         //draw big background box
         setcolor("black");
         draw.beginPath();
-        //x is on the left, y is up from the bottom by the height of the box, width is 10 boxes, height is 1 box
-        staticRect(this.firstboxx, screenH - this.boxheight, this.boxheight * 10, this.boxheight);
+        //x starts at startx , y is up from the bottom by the height of the box, width is 10 boxes, height is 1 box
+        staticRect(this.startx, screenH - this.boxheight, this.boxheight * 10, this.boxheight);
         draw.fill();
 
         setcolor("white");
@@ -466,14 +467,12 @@ class inventory {
         for (let i = 0; i < 10; i++) {
             //draw the box
             //x is down a tenth of the box (i should use a var instead of 10)
-            staticRect(this.firstboxx + this.boxheight / 10, screenH - this.boxheight + this.boxheight / 10, this.boxheight - this.boxheight / 5, this.boxheight - this.boxheight / 5);
-            this.firstboxx += this.boxheight;
+            staticRect(this.startx + i * this.boxheight + this.boxheight / 10, screenH - this.boxheight + this.boxheight / 10, this.boxheight - this.boxheight / 5, this.boxheight - this.boxheight / 5);
         }
+
         //draw a bigger box for the one thats selected
-        staticRect(this.boxheight * this.selectedSlot + this.boxheight / 10 - (this.sboxheight - this.boxheight) / 2, screenH - this.boxheight + this.boxheight / 10 - (this.sboxheight - this.boxheight) / 2, this.sboxheight - this.sboxheight / 5, this.sboxheight - this.sboxheight / 5);
-
+        staticRect(this.startx + this.boxheight * this.selectedSlot + this.boxheight / 10 - (this.sboxheight - this.boxheight) / 2, screenH - this.boxheight + this.boxheight / 10 - (this.sboxheight - this.boxheight) / 2, this.sboxheight - this.sboxheight / 5, this.sboxheight - this.sboxheight / 5);
         draw.fill();
-
 
         //reset the x box (i think of it as a cursor)
         this.firstboxx = 0;
@@ -484,36 +483,33 @@ class inventory {
                 //draw
                 setcolor("red")
                 draw.beginPath();
-                staticCircle((this.firstboxx + (this.boxheight / 2)) - 5, (screenH - this.boxheight + (this.boxheight / 2)) - 5, this.boxheight / 2.5, this.boxheight / 2.5);
+                staticCircle(this.startx + (i * this.boxheight + (this.boxheight / 2)) - 5, (screenH - this.boxheight + (this.boxheight / 2)) - 5, this.boxheight / 2.5, this.boxheight / 2.5);
                 draw.fill();
                 //move to next position
             }
-            this.firstboxx += this.boxheight;
             //do more if statements for more items. to add: number amounts. can't be too hard
         }
-        this.firstboxx = 0;
+
         //loop through boxes
         for (let i = 0; i < 10; i++) {
             //if item write amount
             if (this.array[i].quantity > 0) {
                 //draw
-                drawText(`${this.array[i].quantity}`, this.firstboxx + this.boxheight - 25, screenH - this.boxheight + 55, 20)
+                drawText(`${this.array[i].quantity}`, this.startx + i * this.boxheight + this.boxheight - 25, screenH - this.boxheight + 55, 20)
             }
-            this.firstboxx += this.boxheight;//do more if statements for more items. to add: number amounts. can't be too hard
         }
-        this.firstboxx = 0;
+
         for (let i = 0; i < 10; i++) {
             //if slot draw dot
             if (i == this.selectedSlot) {
                 //draw
                 setcolor("yellow")
                 draw.beginPath();
-                staticCircle((this.firstboxx + (this.boxheight / 2)), (screenH - this.boxheight + (this.boxheight / 2)), this.boxheight / 5, this.boxheight / 5);
+                staticCircle(this.startx + i * this.boxheight + (this.boxheight / 2), screenH - this.boxheight + (this.boxheight / 2), this.boxheight / 5, this.boxheight / 5);
                 draw.fill();
                 //move to next position
 
             }
-            this.firstboxx += this.boxheight;
             //do more if statements for more items. to add: number amounts. can't be too hard
         }
     }
@@ -546,7 +542,7 @@ class wolf {
         this.t = 0.5;
 
         //where we were and where we're going
-        this.pastLoc = this.randomPosition(this.x, this.y, 500); 
+        this.pastLoc = this.randomPosition(this.x, this.y, 500);
         this.currentLoc = [this.x, this.y];
         this.goalLoc = this.randomPosition(this.x, this.y, 500);
     }
@@ -579,7 +575,7 @@ class wolf {
     //this will make wolves slow to respond to position changes(we could also make the wolf overshoot the player)
     move() {
         //we must hunt the player if visible
-        if(this.canSeePlayer){
+        if (this.canSeePlayer) {
             //set back all the variables and set a new goal of the player
             this.pastLoc = this.currentLoc;
             this.currentLoc = [this.x, this.y];
@@ -587,9 +583,9 @@ class wolf {
             this.t = 0.5;
         }
         //get the next location along the curve
-        let newLoc = this.nextPoint(this.pastLoc, this.currentLoc, this.goalLoc, [this.x, this.y], conf.wolfSpeed*movementComp);
+        let newLoc = this.nextPoint(this.pastLoc, this.currentLoc, this.goalLoc, [this.x, this.y], conf.wolfSpeed * movementComp);
         //if we reached the end of the curve
-        if(newLoc == "end"){
+        if (newLoc == "end") {
             //set back all the variables
             this.pastLoc = this.currentLoc;
             this.currentLoc = this.goalLoc;
@@ -597,19 +593,19 @@ class wolf {
             this.goalLoc = this.randomPosition(this.goalLoc[0], this.goalLoc[1], 500);
             this.t = 0.5;
             //calculate where to move this tick
-            newLoc = this.nextPoint(this.pastLoc, this.currentLoc, this.goalLoc, [this.x, this.y], conf.wolfSpeed*movementComp);
+            newLoc = this.nextPoint(this.pastLoc, this.currentLoc, this.goalLoc, [this.x, this.y], conf.wolfSpeed * movementComp);
         }
         //move to the new location
         this.x = newLoc[0];
         this.y = newLoc[1];
-    
+
         //is the player close enough to take damage
         //only calculate if we know we must be close
-        if(this.canSeePlayer){
+        if (this.canSeePlayer) {
             //actually get the distance
-            let distanceToPlayer = Math.sqrt((this.x-mainCharacter.x)**2+(this.y-mainCharacter.y)**2);
+            let distanceToPlayer = Math.sqrt((this.x - mainCharacter.x) ** 2 + (this.y - mainCharacter.y) ** 2);
             //if its within range then attack
-            if(distanceToPlayer < conf.animalRange){
+            if (distanceToPlayer < conf.animalRange) {
                 mainCharacter.health -= conf.animalPower / ticksPerSecond;
             }
         }
@@ -711,32 +707,32 @@ class wolf {
          * Returns:
          *   Array: The next point on the curve [nextX, nextY] that is `targetDistance` away from the current point.
          */
-    
+
         let currentPoint = currentLoc;
         let nextPoint = currentPoint;
         let accumulatedDistance = 0;
-    
+
         while (accumulatedDistance < targetDistance) {
             // Increment t to move along the curve
             this.t += 0.0001; // Small step to prevent skipping the target distance
 
-           // Stop if t exceeds 1 (end of the curve)
-           if (this.t >= 1) {
+            // Stop if t exceeds 1 (end of the curve)
+            if (this.t >= 1) {
                 return "end";
             }
             // Get the next point on the curve
-            nextPoint = this.bezierCurveWithMidpoint(p0, p1, p2,  this.t);
-    
+            nextPoint = this.bezierCurveWithMidpoint(p0, p1, p2, this.t);
+
             // Calculate the distance from the current point to the next point
             const dx = nextPoint[0] - currentPoint[0];
             const dy = nextPoint[1] - currentPoint[1];
             const dist = Math.sqrt(dx * dx + dy * dy);
-    
+
             // Accumulate the distance
             accumulatedDistance += dist;
             currentPoint = nextPoint; // Move to the new point
         }
-    
+
         return nextPoint;
     }
 }
