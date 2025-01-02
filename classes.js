@@ -575,7 +575,7 @@ class wolf {
     //this will make wolves slow to respond to position changes(we could also make the wolf overshoot the player)
     move() {
         //we must hunt the player if visible
-        if (this.canSeePlayer) {
+        if (this.distanceToPlayer < conf.animalSight) {
             //set back all the variables and set a new goal of the player
             this.pastLoc = this.currentLoc;
             this.currentLoc = [this.x, this.y];
@@ -601,14 +601,11 @@ class wolf {
 
         //is the player close enough to take damage
         //only calculate if we know we must be close
-        if (this.canSeePlayer) {
-            //actually get the distance
-            let distanceToPlayer = Math.sqrt((this.x - mainCharacter.x) ** 2 + (this.y - mainCharacter.y) ** 2);
+        if (TouchList.distanceToPlayer < conf.animalRange) {
             //if its within range then attack
-            if (distanceToPlayer < conf.animalRange) {
-                mainCharacter.health -= conf.animalPower / ticksPerSecond;
-            }
+            mainCharacter.health -= conf.animalPower / ticksPerSecond;
         }
+
 
         this.updateChunk();
     }

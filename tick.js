@@ -46,7 +46,7 @@ var conf = {
     chanceOfWolf: 1,
     //far wolves travel in one tick
     //because of how its coded wolves usually move faster than this
-    wolfSpeed: movement.defaultSpeed-1,
+    wolfSpeed: movement.defaultSpeed - 1,
     //how far animals like wolves can see you from
     animalSight: 150,
     //how far animals like wolves can damage you from
@@ -260,8 +260,8 @@ function tempToColor(temperature) {
     }
     return "rgb(" + r + ", " + g + ", " + b + ")"
 }
-function generateChunk(x, y){
-    console.log("creating chunk x:" +x+", y:" +y);
+function generateChunk(x, y) {
+    console.log("creating chunk x:" + x + ", y:" + y);
     chunks[x][y] = new chunk({
         x: x,
         y: y,
@@ -352,12 +352,12 @@ function renderStuff(plantsToRender, animalsToRender) {
     animalsToRender.forEach((animal) => animal.grey());
     draw.fill();
 
-     //we would move all the animals here
-     draw.beginPath();
-     setcolor("#ff69b4");
-     animalsToRender.forEach((animal) => { animal.move(); animal.debug();});
-     plantsToRender.forEach((plant) => { plant.grow(); plant.debug();});
-     draw.fill();
+    //we would move all the animals here
+    draw.beginPath();
+    setcolor("#ff69b4");
+    animalsToRender.forEach((animal) => { animal.move(); animal.debug(); });
+    plantsToRender.forEach((plant) => { plant.grow(); plant.debug(); });
+    draw.fill();
 
     draw.lineWidth = 2;
     draw.beginPath();
@@ -412,7 +412,7 @@ function tick() {
             //find distance between us and plant
             let xDiff = mainCharacter.x - plant.x;
             let yDiff = mainCharacter.y - plant.y;
-            let distance = Math.sqrt((xDiff*xDiff)  + (yDiff*yDiff));
+            let distance = Math.sqrt((xDiff * xDiff) + (yDiff * yDiff));
             if (distance < reachDistance) {
                 //rn only bushes are interactable
                 if (plant instanceof bush) {
@@ -425,12 +425,8 @@ function tick() {
             //find distance between us and plant
             let xDiff = mainCharacter.x - animal.x;
             let yDiff = mainCharacter.y - animal.y;
-            let distance = Math.sqrt((xDiff*xDiff)  + (yDiff*yDiff));
-            if (distance < conf.animalSight) {
-                animal.canSeePlayer = true;
-            }else{
-                animal.canSeePlayer = false;
-            }
+            let distance = Math.sqrt((xDiff * xDiff) + (yDiff * yDiff));
+            animal.distanceToPlayer = distance;
         });
         if (touchableThings.length !== 0) {
             interactObject = touchableThings[0];
@@ -448,20 +444,20 @@ function tick() {
     }
     window.requestAnimationFrame(tick);
 }
-function findThingClosestToPlayer(tp){
+function findThingClosestToPlayer(tp) {
     let closest = 10000000000000000000000000000000;
     let item;
     plantsToRender.forEach(plant => {
         //find distance between us and plant
         let xDiff = plant.x - mainCharacter.x;
-        let yDiff = plant.y-mainCharacter.y;
-        let distance = Math.sqrt((xDiff*xDiff) + (yDiff*yDiff));
+        let yDiff = plant.y - mainCharacter.y;
+        let distance = Math.sqrt((xDiff * xDiff) + (yDiff * yDiff));
         if (distance < closest) {
             closest = distance;
             item = plant
         }
     });
-    if(tp){
+    if (tp) {
         mainCharacter.x = item.x;
         mainCharacter.y = item.y;
 
@@ -469,7 +465,7 @@ function findThingClosestToPlayer(tp){
     item.isdebug = true;
     return item;
 }
-function die(){
+function die() {
     window.location.reload()
 }
 start();
