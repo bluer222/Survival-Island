@@ -601,7 +601,7 @@ class wolf {
 
         //is the player close enough to take damage
         //only calculate if we know we must be close
-        if (TouchList.distanceToPlayer < conf.animalRange) {
+        if (this.distanceToPlayer < conf.animalRange) {
             //if its within range then attack
             mainCharacter.health -= conf.animalPower / ticksPerSecond;
         }
