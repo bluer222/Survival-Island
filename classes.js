@@ -162,7 +162,7 @@ class tree {
         this.x = x;
         this.y = y;
         this.isdebug = false;
-        this.isInteractable = true;
+        this.isInteractable = false;
         this.grows = false;
         this.needsPlayerPosition = false;
         this.moves = false;
