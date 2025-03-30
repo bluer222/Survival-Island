@@ -45,6 +45,11 @@ function createArray(rows, columns) {
   }
   return array;
 }
+function getChunkFromCoords(x, y) {
+  var x = Math.floor(x / gameSize.chunk); // Divide by chunk size and round down
+  var y = Math.floor(y / gameSize.chunk); // Divide by chunk size and round down
+  return chunks[x][y];
+}
 function isEven(n) {
   return n % 2 == 0;
 }

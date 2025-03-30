@@ -9,8 +9,6 @@ var ticksPerHour;
 var ticksPerSecond;
 //multiply things that run 60 times a second by this to compensate for lower tps
 var movementComp;
-//list that will store all the plants in the world
-var plants = [];
 //things in touching distance
 var touchableThings = [];
 //the thing that will be interacted with if you press q
@@ -104,6 +102,17 @@ var mainCharacter = new player({
     //how quickly your health goes up or down
     healRate: 20,
 });
+var color = {
+green: "#096e40",
+lightGreen: "#1f7c43",
+darkGreen: "#08562e",
+brown: "#4d2d14",
+red: "#FF0000",
+grey: "#808080",
+black: "#000000",
+white: "#FFFFFF",
+shadow: "rgba(12,46,32,0.5)"
+};
 var reachDistance = 75;
 var hotbar = new inventory();
 //create array for chunks
@@ -130,26 +139,23 @@ document.addEventListener('keydown', (e) => {
         if (e.key == "a" || e.key == "A" || e.key == "ArrowLeft") {
             movement.x -= 1;
         }
-        if (e.key == "1") { hotbar.selectedSlot = 0; }
-        if (e.key == "2") { hotbar.selectedSlot = 1; }
-        if (e.key == "3") { hotbar.selectedSlot = 2; }
-        if (e.key == "4") { hotbar.selectedSlot = 3; }
-        if (e.key == "5") { hotbar.selectedSlot = 4; }
-        if (e.key == "6") { hotbar.selectedSlot = 5; }
-        if (e.key == "7") { hotbar.selectedSlot = 6; }
-        if (e.key == "8") { hotbar.selectedSlot = 7; }
-        if (e.key == "9") { hotbar.selectedSlot = 8; }
-        if (e.key == "0") { hotbar.selectedSlot = 9; }
-        if (e.key == "e") {
-            hotbar.use()
+        if (!Number.isNaN(parseInt(e.key))) {
+            if (Number(e.key) == 0) {
+                hotbar.selectedSlot = 9;
+            } else if (Number(e.key) > 0 && Number(e.key) <= 9) {
+                hotbar.selectedSlot = Number(e.key) - 1;
+            }
         }
-        if (e.key == "q") {
+        if (e.key == "e") {
             if (interactObject !== "") {
                 interactObject.interact();
                 console.log("there were " + touchableThings.length + " other things that could be interacted")
             }
         }
 
+        if (e.key == "q") {
+            hotbar.drop();
+        }
         //if you press shift and werent already running
         if (e.key == "Shift" && movement.speed != movement.sprintSpeed) {
             //set speed to sprintspeed and increase hunger rate based on config
@@ -159,6 +165,10 @@ document.addEventListener('keydown', (e) => {
     }
     //calculate the actual movement x and y if you compensate for diagnol
     processMovement();
+});
+//detect mousedown
+document.addEventListener('mousedown', (e) => {
+    hotbar.use()
 });
 //detect keyup events
 document.addEventListener('keyup', (e) => {
@@ -310,58 +320,58 @@ function findChunks() {
         });
     });
 }
-function renderStuff(plantsToRender, animalsToRender) {
+function renderStuff(stuff) {
     draw.beginPath();
-    setcolor("rgba(12,46,32,0.5)");
-    plantsToRender.forEach((plant) => plant.shadow());
+    setcolor(color.shadow);
+    stuff.forEach((thing) => thing.render(color.shadow));
     draw.fill();
 
     draw.beginPath();
-    setcolor("#4d2d14");
+    setcolor(color.brown);
     draw.lineWidth = 18;
-    plantsToRender.forEach((plant) => plant.brown());
+    stuff.forEach((thing) => thing.render(color.brown));
     draw.stroke();
 
     draw.beginPath();
-    setcolor("#08562e");
-    plantsToRender.forEach((plant) => plant.darkGreen());
+    setcolor(color.darkGreen);
+    stuff.forEach((thing) => thing.render(color.darkGreen));
     draw.fill();
 
     draw.beginPath();
-    setcolor("#096e40");
-    plantsToRender.forEach((plant) => plant.green());
+    setcolor(color.green);
+    stuff.forEach((thing) => thing.render(color.green));
     draw.fill();
 
     draw.beginPath();
-    setcolor("#1f7c43");
-    plantsToRender.forEach((plant) => plant.lightGreen());
+    setcolor(color.lightGreen);
+    stuff.forEach((thing) => thing.render(color.lightGreen));
     draw.fill();
 
     draw.beginPath();
-    setcolor("#1f7c43");
-    plantsToRender.forEach((plant) => plant.lightGreen());
+    setcolor(color.lightGreen);
+    stuff.forEach((thing) => thing.render(color.lightGreen));
     draw.fill();
 
     draw.beginPath();
-    setcolor("#FF0000");
-    plantsToRender.forEach((plant) => plant.red());
+    setcolor(color.grey);
+    stuff.forEach((thing) => thing.render(color.grey));
+    draw.fill();
+    
+    draw.beginPath();
+    setcolor(color.red);
+    stuff.forEach((thing) => thing.render(color.red));
     draw.fill();
 
-    draw.beginPath();
-    setcolor("#808080");
-    animalsToRender.forEach((animal) => animal.grey());
-    draw.fill();
 
     //we would move all the animals here
     draw.beginPath();
     setcolor("#ff69b4");
-    animalsToRender.forEach((animal) => { animal.move(); animal.debug(); });
-    plantsToRender.forEach((plant) => { plant.grow(); plant.debug(); });
+    stuff.forEach((thing) => { thing.debug(); });
     draw.fill();
 
     draw.lineWidth = 2;
     draw.beginPath();
-    setcolor("#000000");
+    setcolor(color.black);
     onscreenChunks.forEach((chunk) => {
         chunk.draw();
     });
@@ -374,7 +384,7 @@ function calcTps() {
     tps = Math.round(1000 / msSinceLastFrame);
     times = now;
 }
-let plantsToRender = [];
+let thingsToRender = [];
 function tick() {
     calcTps();
     //if tps == 0 then the user is in another tab or somthing so dont run the game
@@ -396,43 +406,42 @@ function tick() {
         grass.draw();
         //finds onscreen chunks, if not generated generate them
         findChunks();
-        plantsToRender = [];
-        let animalsToRender = [];
+        thingsToRender = [];
+
         onscreenChunks.forEach((chunk) => {
             //combine all of the stuff to render onto one list
-            plantsToRender = plantsToRender.concat(chunk.plants);
-            //chunks will also have animals and stuff to add
-            animalsToRender = animalsToRender.concat(...chunk.animals);
+            thingsToRender = thingsToRender.concat(chunk.plants);
+            thingsToRender = thingsToRender.concat(...chunk.animals);//animals needs a ... because it is not an array
+            thingsToRender = thingsToRender.concat(...chunk.items);
         });
         //we need to identify what things are in touching distance
         touchableThings = [];
         interactObject = "";
-        //plants are interactable so this is what does that
-        plantsToRender.forEach(plant => {
+        //interactions and other distance based stuff
+        thingsToRender.forEach(thing => {
             //find distance between us and plant
-            let xDiff = mainCharacter.x - plant.x;
-            let yDiff = mainCharacter.y - plant.y;
+            let xDiff = mainCharacter.x - thing.x;
+            let yDiff = mainCharacter.y - thing.y;
             let distance = Math.sqrt((xDiff * xDiff) + (yDiff * yDiff));
-            if (distance < reachDistance) {
-                //rn only bushes are interactable
-                if (plant instanceof bush) {
-                    touchableThings.push(plant);
-                }
+            if(thing.isInteractable && distance < reachDistance){
+                touchableThings.push(thing);
+            }
+            if(thing.needsPlayerPosition){
+                thing.distanceToPlayer = distance;
+            }
+            if(thing.moves){
+                thing.move();
+            }
+            if(thing.grows) {
+                thing.grow();
             }
         });
-        //animals are not interactable but if they are near the player they will see you
-        animalsToRender.forEach(animal => {
-            //find distance between us and plant
-            let xDiff = mainCharacter.x - animal.x;
-            let yDiff = mainCharacter.y - animal.y;
-            let distance = Math.sqrt((xDiff * xDiff) + (yDiff * yDiff));
-            animal.distanceToPlayer = distance;
-        });
+
         if (touchableThings.length !== 0) {
             interactObject = touchableThings[0];
         }
         //render
-        renderStuff(plantsToRender, animalsToRender);
+        renderStuff(thingsToRender);
         //the other stuff
         mainCharacter.draw();
         hotbar.render();

@@ -121,9 +121,12 @@ class chunk {
         this.seed = property.seed;
         //array of plant in the chunk
         this.plants = [];
+
         //animals must be a set instead because animals often move between chunks
         //unlike arrays you can do set.delete(element) instead of finding indexof element then deleting that index from the list
         this.animals = new Set();
+        //items must also be a set because they get deleted and added 
+        this.items = new Set();
         //add a number of trees and bushes equal to treenumber, asign seeds based on order of adding
         for (let i = 0; i < property.treeNumber; i++) {
             this.plants.push(
@@ -159,6 +162,10 @@ class tree {
         this.x = x;
         this.y = y;
         this.isdebug = false;
+        this.isInteractable = true;
+        this.grows = false;
+        this.needsPlayerPosition = false;
+        this.moves = false;
         //stats of the main branch
         this.size = this.random(75, 100);
         //inside of the tree's leave rectangle theres a smaller light green rectangle
@@ -215,46 +222,46 @@ class tree {
         this.seed = (this.seed * 387420489 + 14348907) % 1e9;
         return Math.floor(getRandom(this.seed) * (max - min + 1) + min);
     }
-    //draw shadow
-    shadow() {
-        //draw main branch shadow
-        rRect(this.x, this.y + 10, this.size + 4, this.size + 4, 10);
-        //draw side branches shadow
-        for (let i = 0; i < this.branches.x.length; i++) {
-            rRect(this.x + this.branches.x[i], this.y + this.branches.y[i] + 10, this.branches.size[i] + 4, this.branches.size[i] + 4, 10);
-            //draw line from center banch to side branch
-            line(this.x, this.y + 10, this.x + this.branches.x[i], this.y + this.branches.y[i] + 10, 18);
+    render(drawColor) {
+        if (drawColor == color.shadow) {
+            //draw main branch shadow
+            rRect(this.x, this.y + 10, this.size + 4, this.size + 4, 10);
+            //draw side branches shadow
+            for (let i = 0; i < this.branches.x.length; i++) {
+                rRect(this.x + this.branches.x[i], this.y + this.branches.y[i] + 10, this.branches.size[i] + 4, this.branches.size[i] + 4, 10);
+                //draw line from center banch to side branch
+                line(this.x, this.y + 10, this.x + this.branches.x[i], this.y + this.branches.y[i] + 10, 18);
+            }
         }
-    }
-    //draw all {color here} parts of tree
-    brown() {
-        //draw branches from center to side branches
-        for (let i = 0; i < this.branches.x.length; i++) {
-            line(this.x, this.y, this.x + this.branches.x[i], this.y + this.branches.y[i]);
+        if (drawColor == color.brown) {
+            //draw branches from center to side branches
+            for (let i = 0; i < this.branches.x.length; i++) {
+                line(this.x, this.y, this.x + this.branches.x[i], this.y + this.branches.y[i]);
+            }
         }
-    }
-    darkGreen() {
-        //draw main branch
-        rRect(this.x, this.y, this.size + 4, this.size + 4, 10);
-        //draw leaves outline
-        for (let i = 0; i < this.branches.x.length; i++) {
-            rRect(this.x + this.branches.x[i], this.y + this.branches.y[i], this.branches.size[i] + 4, this.branches.size[i] + 4, 10);
+        if (drawColor == color.darkGreen) {
+            //draw main branch
+            rRect(this.x, this.y, this.size + 4, this.size + 4, 10);
+            //draw leaves outline
+            for (let i = 0; i < this.branches.x.length; i++) {
+                rRect(this.x + this.branches.x[i], this.y + this.branches.y[i], this.branches.size[i] + 4, this.branches.size[i] + 4, 10);
+            }
         }
-    }
-    green() {
-        //draw main branch
-        rRect(this.x, this.y, this.size, this.size, 10);
-        //draw leaves
-        for (let i = 0; i < this.branches.x.length; i++) {
-            rRect(this.x + this.branches.x[i], this.y + this.branches.y[i], this.branches.size[i], this.branches.size[i], 10);
+        if (drawColor == color.green) {
+            //draw main branch
+            rRect(this.x, this.y, this.size, this.size, 10);
+            //draw leaves
+            for (let i = 0; i < this.branches.x.length; i++) {
+                rRect(this.x + this.branches.x[i], this.y + this.branches.y[i], this.branches.size[i], this.branches.size[i], 10);
+            }
         }
-    }
-    lightGreen() {
-        //draw main innerleaves
-        rRect(this.x + this.innerXOffset, this.y + this.innerYOffset, this.size - 20, this.size - 20, 10);
-        //draw innerleaves
-        for (let i = 0; i < this.branches.x.length; i++) {
-            rRect(this.x + this.branches.x[i] + this.branches.innerXOffset[i], this.y + this.branches.y[i] + this.branches.innerYOffset[i], this.branches.size[i] - 20, this.branches.size[i] - 20, 10);
+        if (drawColor == color.lightGreen) {
+            //draw main innerleaves
+            rRect(this.x + this.innerXOffset, this.y + this.innerYOffset, this.size - 20, this.size - 20, 10);
+            //draw innerleaves
+            for (let i = 0; i < this.branches.x.length; i++) {
+                rRect(this.x + this.branches.x[i] + this.branches.innerXOffset[i], this.y + this.branches.y[i] + this.branches.innerYOffset[i], this.branches.size[i] - 20, this.branches.size[i] - 20, 10);
+            }
         }
     }
     //if we are debugging then draw a pink circle around it
@@ -262,9 +269,6 @@ class tree {
         if (this.isdebug) {
             circle(this.x, this.y, 150, 150);
         }
-    }
-    //these are bush funtions that are run on all plants
-    red() {
     }
     grow(clock) {
     }
@@ -276,6 +280,10 @@ class bush {
         this.y = y;
         this.seed = seed;
         this.isdebug = false;
+        this.isInteractable = true;
+        this.grows = true;
+        this.needsPlayerPosition = false;
+        this.moves = false;
         ///this is how many ticks it will be before one of the berries grows
         this.nextGrowTime = this.random(conf.maxGrowSpeed, conf.minGrowSpeed)
         //this will store our barries
@@ -318,36 +326,27 @@ class bush {
         }
 
     }
-    //render all green parts of the bush
-    green() {
-        circle(this.x, this.y, 75, 75);
+    render(drawColor) {
+        if (drawColor == color.shadow) {
+            circle(this.x, this.y + 3, 75, 75);
+        }
+        if (drawColor == color.green) {
+            circle(this.x, this.y, 75, 75);
+        }
+        if (drawColor == color.red) {
+            this.berries.forEach(berry => {
+                if (berry.hasBerry) {
+                    circle(berry.x + this.x, berry.y + this.y, 10, 10);
+                }
+            });
+        }
     }
+
     //if we are debugging then draw a pink circle around it
     debug() {
         if (this.isdebug) {
             circle(this.x, this.y, 150, 150);
         }
-    }
-    //render red parts(berries)
-    red() {
-        this.berries.forEach(berry => {
-            if (berry.hasBerry) {
-                circle(berry.x + this.x, berry.y + this.y, 10, 10);
-            }
-        });
-    }
-    //render shadow
-    //note to future: when adding day/night why not make shadows move around
-    shadow() {
-        circle(this.x, this.y + 3, 75, 75);
-    }
-    //draw all {color here} parts of bush
-    //we need to have all the tree colors because all plants are run the same way
-    brown() {
-    }
-    darkGreen() {
-    }
-    lightGreen() {
     }
     //random function using the seed
     random(min, max) {
@@ -523,6 +522,48 @@ class inventory {
             this.array[this.selectedSlot].quantity = 0;
         }
     }
+    drop() {
+        if (this.array[this.selectedSlot].quantity > 0) {
+            this.array[this.selectedSlot].quantity -= 1
+            let chunk = getChunkFromCoords(mainCharacter.x, mainCharacter.y);
+            chunk.items.add(
+                new item(this.array[this.selectedSlot].name, mainCharacter.x, mainCharacter.y, chunk.x, chunk.y)
+            );
+        }
+    }
+}
+class item {
+    constructor(name, x, y, chunkx, chunky) {
+        //store the name and location given by the chunk
+        this.name = name;
+        this.x = x;
+        this.y = y;
+        this.chunkx = chunkx;
+        this.chunky = chunky;
+        this.isdebug = false;
+        this.isInteractable = true;
+        this.grows = false;
+        this.needsPlayerPosition = false;
+        this.moves = false;
+    }
+    debug() {
+        if (this.isdebug) {
+            circle(this.x, this.y, 150, 150);
+        }
+    }
+    render(drawColor) {
+        if (this.name == "berry") {
+            if (drawColor == color.red) {
+                circle(this.x, this.y, 10, 10);
+            }
+        }
+    }
+    interact() {
+        if (hotbar.addItem(this.name)) {
+            //if sucessfully added then remove the berry
+            chunks[this.chunkx][this.chunky].items.delete(this);
+        }
+    }
 }
 class wolf {
     constructor(x, y, seed, chunkx, chunky) {
@@ -537,7 +578,10 @@ class wolf {
         this.x = x;
         this.y = y;
         this.health = 100;
-
+        this.isInteractable = false;
+        this.grows = false;
+        this.needsPlayerPosition = true;
+        this.moves = true;
         //how far along the bezier curve we are
         this.t = 0.5;
 
@@ -551,9 +595,10 @@ class wolf {
         this.seed = (this.seed * 387420489 + 14348907) % 1e9;
         return Math.floor(getRandom(this.seed) * (max - min + 1) + min);
     }
-    //draw all {color here} parts of wolf
-    grey() {
-        circle(this.x, this.y, 50, 50)
+    render(drawColor) {
+        if (drawColor == color.grey) {
+            circle(this.x, this.y, 50, 50)
+        }
     }
     debug() {
         if (this.isdebug) {
